@@ -51,7 +51,9 @@ The live demo and the "how CoCo helped" claim both depend on this, so it goes fi
 4. Write down what CoCo did. Screenshots or a note are enough, because judges ask for it.
 5. If something fails, keep the error text. Session E or a fix session needs it.
 
-### B: PartsHub application architecture
+### B: PartsHub application architecture. Merged at 18:48.
+
+Model revision 2 has 36 boxes. Tours: `customer-order`, `late-order` and `region-1997`, all validated with zero warnings.
 
 Prompt:
 
@@ -73,7 +75,9 @@ Prompt:
 >
 > Map each feature to real TPC-H columns in descriptions (o_orderstatus, l_returnflag, ps_availqty and so on). Write three walkthroughs: "A customer orders a part", "Why was this order late?" and "Which region earned the most in 1997?". Update the existing walkthrough's expected_revision. Validate and render all of them. Stay under 16 boxes per scope.
 
-### C1: change questions in the skill, plus clone SQL
+### C1: change questions in the skill, plus clone SQL. Merged at 18:48.
+
+`sql/30_whatif.sql` is written but hasn't been run yet. Run it through CoCo before the demo.
 
 Prompt:
 
