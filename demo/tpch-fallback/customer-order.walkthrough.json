@@ -1,0 +1,245 @@
+{
+  "schema_version": "walkthrough.0.1.0-draft.1",
+  "id": "walk:customer-order",
+  "model_id": "tpch-lake",
+  "expected_revision": 2,
+  "title": "A customer orders a part",
+  "teaching_views": [
+    {
+      "id": "browse",
+      "title": "Finding a part",
+      "layout": "pipeline",
+      "members": [
+        "client:customer-portal",
+        "service:catalog-api",
+        "store:part",
+        "store:partsupp",
+        "store:supplier"
+      ]
+    },
+    {
+      "id": "order",
+      "title": "Placing and shipping an order",
+      "layout": "pipeline",
+      "members": [
+        "client:customer-portal",
+        "service:orders-api",
+        "store:customer",
+        "store:ops-orders",
+        "service:shipping",
+        "service:nightly-load",
+        "store:orders",
+        "store:lineitem"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "overview",
+      "title": "PartsHub beside its warehouse",
+      "focus": [
+        "scope:partshub",
+        "scope:tpch",
+        "scope:mart",
+        "scope:ai"
+      ],
+      "context": "show",
+      "camera": "overview"
+    },
+    {
+      "id": "partshub",
+      "title": "Three apps, one orders database",
+      "root": "scope:partshub",
+      "focus": [
+        "scope:customer-app",
+        "scope:supplier-app",
+        "scope:fulfillment",
+        "store:ops-orders",
+        "service:nightly-load"
+      ],
+      "labels": [
+        {
+          "target": "store:ops-orders",
+          "text": "Live orders and line items"
+        }
+      ],
+      "camera": "frame_focus"
+    },
+    {
+      "id": "in-place",
+      "title": "The order path, in place",
+      "focus": [
+        "client:customer-portal",
+        "service:catalog-api",
+        "service:orders-api",
+        "store:part",
+        "store:partsupp",
+        "store:customer",
+        "store:ops-orders",
+        "service:shipping",
+        "service:nightly-load",
+        "store:orders"
+      ],
+      "context": "dim",
+      "camera": "overview"
+    },
+    {
+      "id": "browse",
+      "title": "Find a part in stock",
+      "view": "browse",
+      "focus": [
+        "client:customer-portal",
+        "service:catalog-api",
+        "store:part",
+        "store:partsupp"
+      ],
+      "trace": [
+        {
+          "relation": "rel:portal-requests-catalog"
+        },
+        {
+          "relation": "rel:catalog-api-reads-part"
+        },
+        {
+          "relation": "rel:catalog-api-reads-part",
+          "return": true
+        },
+        {
+          "relation": "rel:catalog-api-reads-partsupp"
+        },
+        {
+          "relation": "rel:catalog-api-reads-partsupp",
+          "return": true
+        },
+        {
+          "relation": "rel:portal-requests-catalog",
+          "return": true
+        }
+      ],
+      "labels": [
+        {
+          "target": "store:part",
+          "text": "p_brand, p_type, p_retailprice"
+        },
+        {
+          "target": "store:partsupp",
+          "text": "ps_availqty in stock"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "place",
+      "title": "Place the order",
+      "view": "order",
+      "focus": [
+        "client:customer-portal",
+        "service:orders-api",
+        "store:customer",
+        "store:ops-orders"
+      ],
+      "trace": [
+        {
+          "relation": "rel:portal-requests-orders"
+        },
+        {
+          "relation": "rel:orders-api-reads-customer"
+        },
+        {
+          "relation": "rel:orders-api-reads-customer",
+          "return": true
+        },
+        {
+          "relation": "rel:orders-api-writes-ops"
+        }
+      ],
+      "labels": [
+        {
+          "target": "client:customer-portal",
+          "text": "o_orderpriority 1-URGENT"
+        },
+        {
+          "target": "store:ops-orders",
+          "text": "o_orderstatus 'O', l_commitdate promised"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "ship",
+      "title": "The warehouse ships it",
+      "view": "order",
+      "focus": [
+        "service:shipping",
+        "store:ops-orders"
+      ],
+      "trace": [
+        {
+          "relation": "rel:shipping-reads-ops"
+        },
+        {
+          "relation": "rel:shipping-reads-ops",
+          "return": true
+        },
+        {
+          "relation": "rel:shipping-writes-ops"
+        }
+      ],
+      "labels": [
+        {
+          "target": "store:ops-orders",
+          "text": "l_shipdate set; status O to P to F"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "load",
+      "title": "Overnight it lands in Snowflake",
+      "view": "order",
+      "focus": [
+        "service:nightly-load",
+        "store:ops-orders",
+        "store:orders",
+        "store:lineitem"
+      ],
+      "trace": [
+        {
+          "relation": "rel:load-reads-ops"
+        },
+        {
+          "relation": "rel:load-reads-ops",
+          "return": true
+        },
+        {
+          "relation": "rel:load-writes-orders"
+        }
+      ],
+      "labels": [
+        {
+          "target": "service:nightly-load",
+          "text": "Once a night: up to a day behind"
+        },
+        {
+          "target": "store:lineitem",
+          "text": "Line items land here too"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "recap",
+      "title": "From click to warehouse row",
+      "focus": [
+        "scope:customer-app",
+        "scope:supplier-app",
+        "scope:fulfillment",
+        "store:ops-orders",
+        "service:nightly-load",
+        "scope:tpch"
+      ],
+      "reveal": "cumulative",
+      "camera": "overview"
+    }
+  ]
+}

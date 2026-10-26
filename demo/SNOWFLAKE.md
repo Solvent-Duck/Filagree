@@ -57,18 +57,43 @@ open-weight model running in Snowflake answers questions about it out loud.
 2. Point at `LINEITEM` and ask "what's in this table?". The voice layer calls
    `ask.py "what's in this table?" LINEITEM`, and Llama answers from `TABLE_DOCS`.
 3. Ask "which region earned the most in 1997?". The answer comes from the
-   revenue mart, and CoCo can `set_view` on it.
+   revenue mart, and CoCo can `set_view` on it, or present the
+   `region-1997` tour: voice, `ASK_LAKE`, the revenue mart, Llama, then the
+   five TPC-H tables the mart joins.
+4. "Walk me through how a customer orders a part." CoCo presents the
+   `customer-order` tour over PartsHub, the wholesale parts app TPC-H models:
+   the customer portal finds stock (`ps_availqty`) through the Catalog API, the
+   Orders API writes an open order (`o_orderstatus 'O'`), the shipping worker
+   sets ship dates, and the nightly load copies it into `ORDERS`.
+5. Follow-up: "Why was this order late?" The `late-order` tour goes from the
+   shipping worker's `l_receiptdate` versus `l_commitdate`, through the
+   nightly load into `LINEITEM`, to `late_share` in the supplier scorecard
+   and the ops dashboard. It ends on the nightly hop, which sets up the
+   what-if.
+
+PartsHub's apps, orders database and nightly load are `declared`: TPC-H
+describes the business but ships no app code. Everything in Snowflake stays
+`supported` with SQL citations. Say so if a judge asks.
 
 ## Fallback
 
-If the live model build goes wrong, use the checked model and walkthrough:
+If the live model build goes wrong, use the checked model (revision 2) and
+tours:
 
 ```sh
 mkdir -p demo/tpch-lake/.visualyze && cp demo/tpch-fallback/*.json demo/tpch-lake/.visualyze/
 ```
 
-Then ask CoCo to publish `.visualyze/model.json` and present
-`.visualyze/walkthrough.json`. Delete `.visualyze/` before a live run.
+Then ask CoCo to publish `.visualyze/model.json` and present one of:
+
+| File | Tour |
+| --- | --- |
+| `walkthrough.json` | From TPC-H tables to a spoken answer |
+| `region-1997.walkthrough.json` | Which region earned the most in 1997? |
+| `customer-order.walkthrough.json` | A customer orders a part |
+| `late-order.walkthrough.json` | Why was this order late? |
+
+Delete `.visualyze/` before a live run.
 
 ## If Cortex refuses the model
 

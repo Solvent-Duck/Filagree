@@ -1,0 +1,187 @@
+{
+  "schema_version": "walkthrough.0.1.0-draft.1",
+  "id": "walk:late-order",
+  "model_id": "tpch-lake",
+  "expected_revision": 2,
+  "title": "Why was this order late?",
+  "teaching_views": [
+    {
+      "id": "late",
+      "title": "Where lateness is measured",
+      "layout": "pipeline",
+      "members": [
+        "service:shipping",
+        "store:ops-orders",
+        "service:nightly-load",
+        "store:lineitem",
+        "service:refresh",
+        "store:suppliers",
+        "client:dashboard"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "fulfillment",
+      "title": "Fulfillment ships every line",
+      "root": "scope:partshub",
+      "focus": [
+        "scope:fulfillment",
+        "store:ops-orders"
+      ],
+      "camera": "overview"
+    },
+    {
+      "id": "in-place",
+      "title": "The late-order path, in place",
+      "focus": [
+        "service:shipping",
+        "store:ops-orders",
+        "service:nightly-load",
+        "store:lineitem",
+        "service:refresh",
+        "store:suppliers",
+        "client:dashboard"
+      ],
+      "context": "dim",
+      "camera": "overview"
+    },
+    {
+      "id": "dates",
+      "title": "The worker records three dates",
+      "view": "late",
+      "focus": [
+        "service:shipping",
+        "store:ops-orders"
+      ],
+      "trace": [
+        {
+          "relation": "rel:shipping-reads-ops"
+        },
+        {
+          "relation": "rel:shipping-reads-ops",
+          "return": true
+        },
+        {
+          "relation": "rel:shipping-writes-ops"
+        }
+      ],
+      "labels": [
+        {
+          "target": "service:shipping",
+          "text": "l_shipdate, l_receiptdate, l_returnflag"
+        },
+        {
+          "target": "store:ops-orders",
+          "text": "Late: l_receiptdate > l_commitdate"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "load",
+      "title": "Dates reach LINEITEM overnight",
+      "view": "late",
+      "focus": [
+        "service:nightly-load",
+        "store:ops-orders",
+        "store:lineitem"
+      ],
+      "trace": [
+        {
+          "relation": "rel:load-reads-ops"
+        },
+        {
+          "relation": "rel:load-reads-ops",
+          "return": true
+        },
+        {
+          "relation": "rel:load-writes-lineitem"
+        }
+      ],
+      "labels": [
+        {
+          "target": "store:lineitem",
+          "text": "6M lines, each with three dates"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "score",
+      "title": "Late share per supplier",
+      "view": "late",
+      "focus": [
+        "service:refresh",
+        "store:lineitem",
+        "store:suppliers"
+      ],
+      "trace": [
+        {
+          "relation": "rel:refresh-reads-lineitem"
+        },
+        {
+          "relation": "rel:refresh-reads-lineitem",
+          "return": true
+        },
+        {
+          "relation": "rel:refresh-writes-suppliers"
+        }
+      ],
+      "labels": [
+        {
+          "target": "store:suppliers",
+          "text": "late_share = AVG(receipt > commit)"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "dashboard",
+      "title": "Ops sees the slow supplier",
+      "view": "late",
+      "focus": [
+        "client:dashboard",
+        "store:suppliers"
+      ],
+      "trace": [
+        {
+          "relation": "rel:dashboard-reads-suppliers"
+        },
+        {
+          "relation": "rel:dashboard-reads-suppliers",
+          "return": true
+        }
+      ],
+      "labels": [
+        {
+          "target": "client:dashboard",
+          "text": "Suppliers ranked by late_share"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "recap",
+      "title": "A day between ship and score",
+      "focus": [
+        "service:shipping",
+        "store:ops-orders",
+        "service:nightly-load",
+        "store:lineitem",
+        "service:refresh",
+        "store:suppliers",
+        "client:dashboard"
+      ],
+      "reveal": "cumulative",
+      "labels": [
+        {
+          "target": "service:nightly-load",
+          "text": "The nightly hop is the delay"
+        }
+      ],
+      "camera": "overview",
+      "view": "late"
+    }
+  ]
+}

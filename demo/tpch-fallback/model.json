@@ -1,19 +1,47 @@
 {
   "schema_version": "0.1.0-draft.1",
   "model_id": "tpch-lake",
-  "revision": 1,
+  "revision": 2,
   "system_id": "scope:tpch-lake",
   "snapshot": {
-    "id": "tpch-lake-001",
+    "id": "tpch-lake-002",
     "source_revision": null,
     "coverage": "complete",
-    "scope_description": "The tpch-lake project: the TPC-H sample tables it reads, the two marts it builds, and the Cortex open-weight AI that documents tables and answers questions.",
+    "scope_description": "The tpch-lake project: the TPC-H sample tables it reads, the two marts it builds, and the Cortex open-weight AI that documents tables and answers questions. Also PartsHub, the wholesale parts business TPC-H models, drawn as declared app parts whose features map onto real TPC-H columns.",
     "omissions": [
       "Sample schemas other than TPCH_SF1 (TPCDS, larger TPC-H scales) are not used.",
-      "Warehouse sizing, roles and grants are outside this model."
+      "Warehouse sizing, roles and grants are outside this model.",
+      "PartsHub is illustrative: TPC-H describes the business but ships no application code, so its apps, orders database and nightly load are declared, not cited."
     ]
   },
   "entities": [
+    {
+      "id": "client:customer-portal",
+      "kind": "client",
+      "label": "Customer portal",
+      "boundary": "internal",
+      "subtype": "web",
+      "description": "Customers search parts by p_brand, p_type and p_size, order with an o_orderpriority (1-URGENT to 5-LOW), and track o_orderstatus: O open, P partly shipped, F fulfilled.",
+      "basis": "declared"
+    },
+    {
+      "id": "client:dashboard",
+      "kind": "client",
+      "label": "Ops dashboard",
+      "boundary": "internal",
+      "subtype": "web",
+      "description": "PartsHub operations view: net revenue by region and month from REVENUE_BY_NATION_MONTH, and suppliers ranked by late_share and margin from SUPPLIER_SCORECARD.",
+      "basis": "declared"
+    },
+    {
+      "id": "client:supplier-portal",
+      "kind": "client",
+      "label": "Supplier portal",
+      "boundary": "internal",
+      "subtype": "web",
+      "description": "Suppliers review their offers: ps_availqty on hand and ps_supplycost per part.",
+      "basis": "declared"
+    },
     {
       "id": "client:voice",
       "kind": "client",
@@ -43,12 +71,32 @@
       "protocol": "sql"
     },
     {
+      "id": "interface:catalog-api",
+      "kind": "interface",
+      "label": "/catalog",
+      "boundary": "internal",
+      "subtype": "api",
+      "description": "Search parts and the suppliers that stock them (PART joined to PARTSUPP and SUPPLIER).",
+      "basis": "declared",
+      "protocol": "https"
+    },
+    {
+      "id": "interface:orders-api",
+      "kind": "interface",
+      "label": "/orders",
+      "boundary": "internal",
+      "subtype": "api",
+      "description": "Create an order and read its status (o_orderstatus F/O/P).",
+      "basis": "declared",
+      "protocol": "https"
+    },
+    {
       "id": "scope:ai",
       "kind": "scope",
-      "label": "Cortex AI",
+      "label": "Analytics & AI",
       "boundary": "internal",
       "subtype": "subsystem",
-      "description": "FILAGREE.AI: open-weight Llama 3.3 writes table docs and answers questions.",
+      "description": "FILAGREE.AI: open-weight Llama 3.3 writes table docs and answers questions. PartsHub's ops dashboard sits beside it, reading the marts.",
       "basis": "supported",
       "evidence_ids": [
         "ev:readme-map",
@@ -57,6 +105,24 @@
       "technology": [
         "Snowflake"
       ]
+    },
+    {
+      "id": "scope:customer-app",
+      "kind": "scope",
+      "label": "Customer app",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "What a buying customer (c_custkey, c_mktsegment) sees: browse parts, place and track orders.",
+      "basis": "declared"
+    },
+    {
+      "id": "scope:fulfillment",
+      "kind": "scope",
+      "label": "Fulfillment",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "Shipping, receipt and returns for each order line.",
+      "basis": "declared"
     },
     {
       "id": "scope:mart",
@@ -73,6 +139,24 @@
       "technology": [
         "Snowflake"
       ]
+    },
+    {
+      "id": "scope:partshub",
+      "kind": "scope",
+      "label": "PartsHub",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "The wholesale parts business TPC-H was designed around: customers order parts that suppliers stock, and a warehouse ships them. Illustrative app parts; each maps to TPC-H columns.",
+      "basis": "declared"
+    },
+    {
+      "id": "scope:supplier-app",
+      "kind": "scope",
+      "label": "Supplier app",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "What a supplier (s_suppkey) sees: the parts it offers, stock on hand and cost.",
+      "basis": "declared"
     },
     {
       "id": "scope:tpch",
@@ -118,6 +202,15 @@
       ]
     },
     {
+      "id": "service:catalog-api",
+      "kind": "service",
+      "label": "Catalog API",
+      "boundary": "internal",
+      "subtype": "application",
+      "description": "Serves parts (p_name, p_brand, p_type, p_retailprice) with each supplier's offer: ps_availqty for stock, ps_supplycost for cost, s_name and s_nationkey for the supplier.",
+      "basis": "declared"
+    },
+    {
       "id": "service:docs-writer",
       "kind": "service",
       "label": "Table doc writer",
@@ -150,6 +243,24 @@
       ]
     },
     {
+      "id": "service:nightly-load",
+      "kind": "service",
+      "label": "Nightly load",
+      "boundary": "internal",
+      "subtype": "scheduler",
+      "description": "Copies the day's orders and line items from the orders database into ORDERS and LINEITEM once a night, so the warehouse and both marts run up to a day behind.",
+      "basis": "declared"
+    },
+    {
+      "id": "service:orders-api",
+      "kind": "service",
+      "label": "Orders API",
+      "boundary": "internal",
+      "subtype": "application",
+      "description": "Places an order: checks the customer (c_custkey, c_acctbal), writes the order with o_orderstatus 'O', o_orderpriority and o_totalprice, and one line per part with l_quantity, l_extendedprice, l_discount and the promised l_commitdate.",
+      "basis": "declared"
+    },
+    {
       "id": "service:refresh",
       "kind": "service",
       "label": "REFRESH_MARTS",
@@ -163,6 +274,15 @@
       "technology": [
         "Snowflake"
       ]
+    },
+    {
+      "id": "service:shipping",
+      "kind": "service",
+      "label": "Shipping worker",
+      "boundary": "internal",
+      "subtype": "worker",
+      "description": "Ships each order line: sets l_shipdate when it leaves and l_receiptdate when it arrives (late when l_receiptdate > l_commitdate), records l_returnflag (R returned, A accepted, N not yet received), and rolls o_orderstatus from O to P to F.",
+      "basis": "declared"
     },
     {
       "id": "store:catalog",
@@ -238,6 +358,15 @@
       "technology": [
         "Snowflake"
       ]
+    },
+    {
+      "id": "store:ops-orders",
+      "kind": "datastore",
+      "label": "Orders database",
+      "boundary": "internal",
+      "subtype": "relational",
+      "description": "PartsHub's live operational orders and line items: the rows that become ORDERS and LINEITEM, with o_orderstatus, o_orderpriority, l_shipdate, l_commitdate, l_receiptdate and l_returnflag.",
+      "basis": "declared"
     },
     {
       "id": "store:orders",
@@ -397,6 +526,34 @@
       ]
     },
     {
+      "id": "rel:catalog-api-exposes",
+      "kind": "exposes",
+      "source": "service:catalog-api",
+      "target": "interface:catalog-api",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:catalog-api-reads-part",
+      "kind": "reads",
+      "source": "service:catalog-api",
+      "target": "store:part",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:catalog-api-reads-partsupp",
+      "kind": "reads",
+      "source": "service:catalog-api",
+      "target": "store:partsupp",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:catalog-api-reads-supplier",
+      "kind": "reads",
+      "source": "service:catalog-api",
+      "target": "store:supplier",
+      "basis": "declared"
+    },
+    {
       "id": "rel:contains-ai",
       "kind": "contains",
       "source": "scope:tpch-lake",
@@ -427,6 +584,13 @@
       ]
     },
     {
+      "id": "rel:contains-catalog-api",
+      "kind": "contains",
+      "source": "scope:supplier-app",
+      "target": "service:catalog-api",
+      "basis": "declared"
+    },
+    {
       "id": "rel:contains-customer",
       "kind": "contains",
       "source": "scope:tpch",
@@ -435,6 +599,27 @@
       "evidence_ids": [
         "ev:readme-map"
       ]
+    },
+    {
+      "id": "rel:contains-customer-app",
+      "kind": "contains",
+      "source": "scope:partshub",
+      "target": "scope:customer-app",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-customer-portal",
+      "kind": "contains",
+      "source": "scope:customer-app",
+      "target": "client:customer-portal",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-dashboard",
+      "kind": "contains",
+      "source": "scope:ai",
+      "target": "client:dashboard",
+      "basis": "declared"
     },
     {
       "id": "rel:contains-docs",
@@ -455,6 +640,13 @@
       "evidence_ids": [
         "ev:readme-map"
       ]
+    },
+    {
+      "id": "rel:contains-fulfillment",
+      "kind": "contains",
+      "source": "scope:partshub",
+      "target": "scope:fulfillment",
+      "basis": "declared"
     },
     {
       "id": "rel:contains-lineitem",
@@ -497,6 +689,20 @@
       ]
     },
     {
+      "id": "rel:contains-nightly-load",
+      "kind": "contains",
+      "source": "scope:partshub",
+      "target": "service:nightly-load",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-ops-orders",
+      "kind": "contains",
+      "source": "scope:partshub",
+      "target": "store:ops-orders",
+      "basis": "declared"
+    },
+    {
       "id": "rel:contains-orders",
       "kind": "contains",
       "source": "scope:tpch",
@@ -507,6 +713,13 @@
       ]
     },
     {
+      "id": "rel:contains-orders-api",
+      "kind": "contains",
+      "source": "scope:customer-app",
+      "target": "service:orders-api",
+      "basis": "declared"
+    },
+    {
       "id": "rel:contains-part",
       "kind": "contains",
       "source": "scope:tpch",
@@ -515,6 +728,13 @@
       "evidence_ids": [
         "ev:readme-map"
       ]
+    },
+    {
+      "id": "rel:contains-partshub",
+      "kind": "contains",
+      "source": "scope:tpch-lake",
+      "target": "scope:partshub",
+      "basis": "declared"
     },
     {
       "id": "rel:contains-partsupp",
@@ -557,6 +777,13 @@
       ]
     },
     {
+      "id": "rel:contains-shipping",
+      "kind": "contains",
+      "source": "scope:fulfillment",
+      "target": "service:shipping",
+      "basis": "declared"
+    },
+    {
       "id": "rel:contains-supplier",
       "kind": "contains",
       "source": "scope:tpch",
@@ -565,6 +792,20 @@
       "evidence_ids": [
         "ev:readme-map"
       ]
+    },
+    {
+      "id": "rel:contains-supplier-app",
+      "kind": "contains",
+      "source": "scope:partshub",
+      "target": "scope:supplier-app",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-supplier-portal",
+      "kind": "contains",
+      "source": "scope:supplier-app",
+      "target": "client:supplier-portal",
+      "basis": "declared"
     },
     {
       "id": "rel:contains-suppliers",
@@ -597,6 +838,20 @@
       ]
     },
     {
+      "id": "rel:dashboard-reads-revenue",
+      "kind": "reads",
+      "source": "client:dashboard",
+      "target": "store:revenue",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:dashboard-reads-suppliers",
+      "kind": "reads",
+      "source": "client:dashboard",
+      "target": "store:suppliers",
+      "basis": "declared"
+    },
+    {
       "id": "rel:docs-reads-catalog",
       "kind": "reads",
       "source": "service:docs-writer",
@@ -625,6 +880,62 @@
       "evidence_ids": [
         "ev:docs-llm"
       ]
+    },
+    {
+      "id": "rel:load-reads-ops",
+      "kind": "reads",
+      "source": "service:nightly-load",
+      "target": "store:ops-orders",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:load-writes-lineitem",
+      "kind": "writes",
+      "source": "service:nightly-load",
+      "target": "store:lineitem",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:load-writes-orders",
+      "kind": "writes",
+      "source": "service:nightly-load",
+      "target": "store:orders",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:orders-api-exposes",
+      "kind": "exposes",
+      "source": "service:orders-api",
+      "target": "interface:orders-api",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:orders-api-reads-customer",
+      "kind": "reads",
+      "source": "service:orders-api",
+      "target": "store:customer",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:orders-api-writes-ops",
+      "kind": "writes",
+      "source": "service:orders-api",
+      "target": "store:ops-orders",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:portal-requests-catalog",
+      "kind": "requests",
+      "source": "client:customer-portal",
+      "target": "interface:catalog-api",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:portal-requests-orders",
+      "kind": "requests",
+      "source": "client:customer-portal",
+      "target": "interface:orders-api",
+      "basis": "declared"
     },
     {
       "id": "rel:refresh-reads-customer",
@@ -725,6 +1036,27 @@
       "evidence_ids": [
         "ev:supplier-sql"
       ]
+    },
+    {
+      "id": "rel:shipping-reads-ops",
+      "kind": "reads",
+      "source": "service:shipping",
+      "target": "store:ops-orders",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:shipping-writes-ops",
+      "kind": "writes",
+      "source": "service:shipping",
+      "target": "store:ops-orders",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:supplier-portal-requests-catalog",
+      "kind": "requests",
+      "source": "client:supplier-portal",
+      "target": "interface:catalog-api",
+      "basis": "declared"
     },
     {
       "id": "rel:voice-requests-ask",
