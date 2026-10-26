@@ -1,5 +1,7 @@
 # Demo
 
+**Snowflake challenge:** see [SNOWFLAKE.md](SNOWFLAKE.md). `tpch-lake/` runs on the free TPC-H sample share, and `tpch-fallback/` holds its checked model and walkthrough.
+
 `acme-data/` is a small made-up data repo for the agent to read live. `fallback/` holds a checked model and walkthrough of it, in case the live run goes wrong.
 
 ## Run it

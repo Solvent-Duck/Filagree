@@ -1,0 +1,232 @@
+{
+  "schema_version": "walkthrough.0.1.0-draft.1",
+  "id": "walk:question-to-answer",
+  "model_id": "tpch-lake",
+  "expected_revision": 1,
+  "title": "From TPC-H tables to a spoken answer",
+  "teaching_views": [
+    {
+      "id": "revenue",
+      "title": "Building the revenue mart",
+      "layout": "pipeline",
+      "members": [
+        "store:lineitem",
+        "store:orders",
+        "store:customer",
+        "store:nation",
+        "store:region",
+        "service:refresh",
+        "store:revenue"
+      ]
+    },
+    {
+      "id": "ask",
+      "title": "Answering a question",
+      "layout": "pipeline",
+      "members": [
+        "client:voice",
+        "service:ask",
+        "store:docs",
+        "store:revenue",
+        "service:llm"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "overview",
+      "title": "Source, marts, and AI",
+      "focus": [
+        "scope:tpch",
+        "scope:mart",
+        "scope:ai"
+      ],
+      "context": "show",
+      "camera": "overview"
+    },
+    {
+      "id": "source",
+      "title": "Eight free TPC-H tables",
+      "root": "scope:tpch",
+      "focus": [
+        "store:region",
+        "store:nation",
+        "store:customer",
+        "store:orders",
+        "store:lineitem",
+        "store:part",
+        "store:supplier",
+        "store:partsupp"
+      ],
+      "labels": [
+        {
+          "target": "store:lineitem",
+          "text": "6M line items"
+        },
+        {
+          "target": "store:orders",
+          "text": "1.5M orders"
+        }
+      ],
+      "camera": "frame_focus"
+    },
+    {
+      "id": "in-place",
+      "title": "Revenue joins five of them",
+      "focus": [
+        "store:lineitem",
+        "store:orders",
+        "store:customer",
+        "store:nation",
+        "store:region",
+        "service:refresh",
+        "store:revenue"
+      ],
+      "context": "dim",
+      "camera": "overview"
+    },
+    {
+      "id": "revenue",
+      "title": "Line items become revenue",
+      "view": "revenue",
+      "focus": [
+        "service:refresh",
+        "store:lineitem",
+        "store:orders",
+        "store:revenue"
+      ],
+      "trace": [
+        {
+          "relation": "rel:refresh-reads-lineitem"
+        },
+        {
+          "relation": "rel:refresh-reads-lineitem",
+          "return": true
+        },
+        {
+          "relation": "rel:refresh-reads-orders"
+        },
+        {
+          "relation": "rel:refresh-reads-orders",
+          "return": true
+        },
+        {
+          "relation": "rel:refresh-writes-revenue"
+        }
+      ],
+      "labels": [
+        {
+          "target": "store:revenue",
+          "text": "price x (1 - discount)"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "suppliers",
+      "title": "Suppliers get a scorecard",
+      "root": "scope:mart",
+      "focus": [
+        "service:refresh",
+        "store:suppliers"
+      ],
+      "labels": [
+        {
+          "target": "store:suppliers",
+          "text": "margin and late-delivery share"
+        }
+      ],
+      "camera": "frame_focus"
+    },
+    {
+      "id": "docs",
+      "title": "Llama documents every table",
+      "root": "scope:ai",
+      "focus": [
+        "service:docs-writer",
+        "service:llm",
+        "store:docs"
+      ],
+      "trace": [
+        {
+          "relation": "rel:docs-requests-llm"
+        },
+        {
+          "relation": "rel:docs-requests-llm",
+          "return": true
+        },
+        {
+          "relation": "rel:docs-writes-docs"
+        }
+      ],
+      "labels": [
+        {
+          "target": "service:llm",
+          "text": "llama3.3-70b, open weights"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "ask",
+      "title": "A spoken question, answered",
+      "view": "ask",
+      "focus": [
+        "client:voice",
+        "service:ask",
+        "store:docs",
+        "store:revenue",
+        "service:llm"
+      ],
+      "trace": [
+        {
+          "relation": "rel:voice-requests-ask"
+        },
+        {
+          "relation": "rel:ask-reads-docs"
+        },
+        {
+          "relation": "rel:ask-reads-docs",
+          "return": true
+        },
+        {
+          "relation": "rel:ask-reads-revenue"
+        },
+        {
+          "relation": "rel:ask-reads-revenue",
+          "return": true
+        },
+        {
+          "relation": "rel:ask-requests-llm"
+        },
+        {
+          "relation": "rel:ask-requests-llm",
+          "return": true
+        },
+        {
+          "relation": "rel:voice-requests-ask",
+          "return": true
+        }
+      ],
+      "labels": [
+        {
+          "target": "client:voice",
+          "text": "\"Which region earned most in 1997?\""
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "recap",
+      "title": "No SQL on screen",
+      "focus": [
+        "scope:tpch",
+        "scope:mart",
+        "scope:ai",
+        "client:voice"
+      ],
+      "reveal": "cumulative",
+      "camera": "overview"
+    }
+  ]
+}
