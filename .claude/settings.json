@@ -1,0 +1,6 @@
+{
+  "permissions": {
+    "additionalDirectories": ["/Users/isaiahbergstrom/ref/visualyze"],
+    "deny": ["Edit(~/ref/visualyze/**)"]
+  }
+}
