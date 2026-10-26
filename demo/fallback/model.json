@@ -1,0 +1,566 @@
+{
+  "schema_version": "0.1.0-draft.1",
+  "model_id": "acme-client-data",
+  "revision": 1,
+  "system_id": "scope:acme",
+  "snapshot": {
+    "id": "acme-client-data-001",
+    "source_revision": null,
+    "coverage": "complete",
+    "scope_description": "The acme-data repository: client portal and API, Postgres client tables, nightly extract, Snowpipe, dbt and the Snowflake lake.",
+    "omissions": [
+      "Invoices follow the same path as clients but are not traced separately.",
+      "Scheduling, IAM and the storage integration are outside this model."
+    ]
+  },
+  "entities": [
+    {
+      "id": "scope:acme",
+      "kind": "scope",
+      "label": "Acme client data",
+      "boundary": "internal",
+      "subtype": "system",
+      "description": "From the client portal's operational tables to the Snowflake lake analysts query.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "scope:app",
+      "kind": "scope",
+      "label": "Client app",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "Portal, Clients API and the operational Postgres tables.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "scope:ingest",
+      "kind": "scope",
+      "label": "Ingest",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "Nightly extract from Postgres into the S3 landing bucket.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "scope:snowflake",
+      "kind": "scope",
+      "label": "Snowflake",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "Stage, Snowpipe, dbt and the RAW and LAKE schemas.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "client:portal",
+      "kind": "client",
+      "label": "Client portal",
+      "boundary": "internal",
+      "subtype": "web",
+      "description": "Web portal where clients are created.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:portal-fetch"
+      ],
+      "technology": [
+        "TypeScript"
+      ]
+    },
+    {
+      "id": "service:clients-api",
+      "kind": "service",
+      "label": "Clients API",
+      "boundary": "internal",
+      "subtype": "application",
+      "description": "Only writer of the operational client tables.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:api-writes"
+      ],
+      "technology": [
+        "FastAPI"
+      ]
+    },
+    {
+      "id": "store:client-db",
+      "kind": "datastore",
+      "label": "Client tables",
+      "boundary": "internal",
+      "subtype": "relational",
+      "description": "clients, contracts and invoices in Postgres.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:schema"
+      ],
+      "technology": [
+        "PostgreSQL 16"
+      ]
+    },
+    {
+      "id": "service:extract",
+      "kind": "service",
+      "label": "Nightly extract",
+      "boundary": "internal",
+      "subtype": "worker",
+      "description": "Copies rows changed in the last day to S3 as Parquet, 02:00 UTC.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:extract-read"
+      ],
+      "technology": [
+        "Python",
+        "pandas"
+      ]
+    },
+    {
+      "id": "store:landing",
+      "kind": "datastore",
+      "label": "Landing bucket",
+      "boundary": "internal",
+      "subtype": "object",
+      "description": "s3://acme-landing/<table>/dt=<date>/",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:extract-write",
+        "ev:stage"
+      ],
+      "technology": [
+        "S3",
+        "Parquet"
+      ]
+    },
+    {
+      "id": "service:snowpipe",
+      "kind": "service",
+      "label": "Snowpipe",
+      "boundary": "internal",
+      "subtype": "worker",
+      "description": "Auto-ingest pipes, one per table, from the landing stage into RAW.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:pipes"
+      ],
+      "technology": [
+        "Snowpipe"
+      ]
+    },
+    {
+      "id": "store:raw",
+      "kind": "datastore",
+      "label": "RAW schema",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "Append-only loads of clients, contracts and invoices.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:pipes"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "service:dbt",
+      "kind": "service",
+      "label": "dbt models",
+      "boundary": "internal",
+      "subtype": "worker",
+      "description": "Deduplicates RAW in staging and builds lake tables.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:dbt-stg",
+        "ev:dbt-lake"
+      ],
+      "technology": [
+        "dbt"
+      ]
+    },
+    {
+      "id": "store:lake",
+      "kind": "datastore",
+      "label": "LAKE schema",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "dim_client: one row per client with current ARR.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:dbt-lake",
+        "ev:dbt-project"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "concern:pii",
+      "kind": "concern",
+      "label": "PII masking",
+      "boundary": "internal",
+      "subtype": "data_access_control",
+      "description": "Email and phone are masked unless the session has PII_READER.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:masking"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel:contains-app",
+      "kind": "contains",
+      "source": "scope:acme",
+      "target": "scope:app",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-ingest",
+      "kind": "contains",
+      "source": "scope:acme",
+      "target": "scope:ingest",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-snowflake",
+      "kind": "contains",
+      "source": "scope:acme",
+      "target": "scope:snowflake",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-portal",
+      "kind": "contains",
+      "source": "scope:app",
+      "target": "client:portal",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-clients-api",
+      "kind": "contains",
+      "source": "scope:app",
+      "target": "service:clients-api",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-client-db",
+      "kind": "contains",
+      "source": "scope:app",
+      "target": "store:client-db",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-extract",
+      "kind": "contains",
+      "source": "scope:ingest",
+      "target": "service:extract",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-landing",
+      "kind": "contains",
+      "source": "scope:ingest",
+      "target": "store:landing",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-snowpipe",
+      "kind": "contains",
+      "source": "scope:snowflake",
+      "target": "service:snowpipe",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-raw",
+      "kind": "contains",
+      "source": "scope:snowflake",
+      "target": "store:raw",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-dbt",
+      "kind": "contains",
+      "source": "scope:snowflake",
+      "target": "service:dbt",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-lake",
+      "kind": "contains",
+      "source": "scope:snowflake",
+      "target": "store:lake",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-pii",
+      "kind": "contains",
+      "source": "scope:snowflake",
+      "target": "concern:pii",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:portal-requests-api",
+      "kind": "requests",
+      "source": "client:portal",
+      "target": "service:clients-api",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:portal-fetch"
+      ]
+    },
+    {
+      "id": "rel:api-writes-db",
+      "kind": "writes",
+      "source": "service:clients-api",
+      "target": "store:client-db",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:api-writes"
+      ]
+    },
+    {
+      "id": "rel:extract-reads-db",
+      "kind": "reads",
+      "source": "service:extract",
+      "target": "store:client-db",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:extract-read"
+      ]
+    },
+    {
+      "id": "rel:extract-writes-landing",
+      "kind": "writes",
+      "source": "service:extract",
+      "target": "store:landing",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:extract-write"
+      ]
+    },
+    {
+      "id": "rel:snowpipe-reads-landing",
+      "kind": "reads",
+      "source": "service:snowpipe",
+      "target": "store:landing",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:stage",
+        "ev:pipes"
+      ]
+    },
+    {
+      "id": "rel:snowpipe-writes-raw",
+      "kind": "writes",
+      "source": "service:snowpipe",
+      "target": "store:raw",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:pipes"
+      ]
+    },
+    {
+      "id": "rel:dbt-reads-raw",
+      "kind": "reads",
+      "source": "service:dbt",
+      "target": "store:raw",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:dbt-stg",
+        "ev:dbt-lake"
+      ]
+    },
+    {
+      "id": "rel:dbt-writes-lake",
+      "kind": "writes",
+      "source": "service:dbt",
+      "target": "store:lake",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:dbt-lake",
+        "ev:dbt-project"
+      ]
+    },
+    {
+      "id": "rel:pii-covers-lake",
+      "kind": "applies_to",
+      "source": "concern:pii",
+      "target": "store:lake",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:masking"
+      ],
+      "aspect": "email_phone_masking"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev:readme-map",
+      "description": "README table of the repository's parts",
+      "locator": {
+        "kind": "source",
+        "path": "README.md",
+        "start_line": 7,
+        "end_line": 14
+      }
+    },
+    {
+      "id": "ev:schema",
+      "description": "Postgres DDL for clients, contracts and invoices",
+      "locator": {
+        "kind": "source",
+        "path": "app/db/schema.sql",
+        "start_line": 3,
+        "end_line": 30
+      }
+    },
+    {
+      "id": "ev:portal-fetch",
+      "description": "Portal POSTs new clients to the Clients API",
+      "locator": {
+        "kind": "source",
+        "path": "app/portal/src/api.ts",
+        "start_line": 3,
+        "end_line": 17
+      }
+    },
+    {
+      "id": "ev:api-writes",
+      "description": "Clients API inserts into clients and contracts",
+      "locator": {
+        "kind": "source",
+        "path": "app/api/clients.py",
+        "start_line": 18,
+        "end_line": 37
+      }
+    },
+    {
+      "id": "ev:extract-read",
+      "description": "Extract selects changed rows from each client table",
+      "locator": {
+        "kind": "source",
+        "path": "ingest/extract_clients.py",
+        "start_line": 14,
+        "end_line": 27
+      }
+    },
+    {
+      "id": "ev:extract-write",
+      "description": "Extract uploads Parquet to the acme-landing bucket",
+      "locator": {
+        "kind": "source",
+        "path": "ingest/extract_clients.py",
+        "start_line": 15,
+        "end_line": 31
+      }
+    },
+    {
+      "id": "ev:stage",
+      "description": "External stage over s3://acme-landing/",
+      "locator": {
+        "kind": "source",
+        "path": "snowflake/stage.sql",
+        "start_line": 3,
+        "end_line": 6
+      }
+    },
+    {
+      "id": "ev:pipes",
+      "description": "Auto-ingest pipes copy each table into RAW",
+      "locator": {
+        "kind": "source",
+        "path": "snowflake/stage.sql",
+        "start_line": 8,
+        "end_line": 21
+      }
+    },
+    {
+      "id": "ev:dbt-stg",
+      "description": "Staging model reads raw.clients",
+      "locator": {
+        "kind": "source",
+        "path": "dbt/models/staging/stg_clients.sql",
+        "start_line": 3,
+        "end_line": 5
+      }
+    },
+    {
+      "id": "ev:dbt-lake",
+      "description": "dim_client builds the lake table from staging and raw.contracts",
+      "locator": {
+        "kind": "source",
+        "path": "dbt/models/lake/dim_client.sql",
+        "start_line": 1,
+        "end_line": 15
+      }
+    },
+    {
+      "id": "ev:dbt-project",
+      "description": "dbt materializes lake models as tables in the lake schema",
+      "locator": {
+        "kind": "source",
+        "path": "dbt/dbt_project.yml",
+        "start_line": 5,
+        "end_line": 12
+      }
+    },
+    {
+      "id": "ev:masking",
+      "description": "Masking policy on lake.dim_client email and phone",
+      "locator": {
+        "kind": "source",
+        "path": "snowflake/policies.sql",
+        "start_line": 3,
+        "end_line": 7
+      }
+    }
+  ]
+}

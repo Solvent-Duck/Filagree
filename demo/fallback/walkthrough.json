@@ -1,0 +1,181 @@
+{
+  "schema_version": "walkthrough.0.1.0-draft.1",
+  "id": "walk:clients-to-lake",
+  "model_id": "acme-client-data",
+  "expected_revision": 1,
+  "title": "Client tables to the Snowflake lake",
+  "teaching_views": [
+    {
+      "id": "pipeline",
+      "title": "Client data pipeline",
+      "layout": "pipeline",
+      "members": [
+        "store:client-db",
+        "service:extract",
+        "store:landing",
+        "service:snowpipe",
+        "store:raw",
+        "service:dbt",
+        "store:lake"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "overview",
+      "title": "Three parts: app, ingest, Snowflake",
+      "focus": [
+        "scope:app",
+        "scope:ingest",
+        "scope:snowflake"
+      ],
+      "context": "show",
+      "camera": "overview"
+    },
+    {
+      "id": "source",
+      "title": "Client tables live in Postgres",
+      "root": "scope:app",
+      "focus": [
+        "client:portal",
+        "service:clients-api",
+        "store:client-db"
+      ],
+      "trace": [
+        {
+          "relation": "rel:portal-requests-api"
+        },
+        {
+          "relation": "rel:api-writes-db"
+        }
+      ],
+      "labels": [
+        {
+          "target": "store:client-db",
+          "text": "clients, contracts, invoices"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "in-place",
+      "title": "The path spans all three parts",
+      "focus": [
+        "store:client-db",
+        "service:extract",
+        "store:landing",
+        "service:snowpipe",
+        "store:raw",
+        "service:dbt",
+        "store:lake"
+      ],
+      "context": "dim",
+      "camera": "overview"
+    },
+    {
+      "id": "extract",
+      "title": "Nightly extract lands Parquet in S3",
+      "view": "pipeline",
+      "focus": [
+        "service:extract",
+        "store:client-db",
+        "store:landing"
+      ],
+      "trace": [
+        {
+          "relation": "rel:extract-reads-db"
+        },
+        {
+          "relation": "rel:extract-reads-db",
+          "return": true
+        },
+        {
+          "relation": "rel:extract-writes-landing"
+        }
+      ],
+      "labels": [
+        {
+          "target": "rel:extract-writes-landing",
+          "text": "s3://acme-landing, 02:00 UTC"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "load",
+      "title": "Snowpipe loads RAW",
+      "view": "pipeline",
+      "focus": [
+        "service:snowpipe",
+        "store:landing",
+        "store:raw"
+      ],
+      "reveal": "cumulative",
+      "trace": [
+        {
+          "relation": "rel:snowpipe-reads-landing"
+        },
+        {
+          "relation": "rel:snowpipe-reads-landing",
+          "return": true
+        },
+        {
+          "relation": "rel:snowpipe-writes-raw"
+        }
+      ],
+      "labels": [
+        {
+          "target": "service:snowpipe",
+          "text": "Auto-ingest, one pipe per table"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "model",
+      "title": "dbt builds the lake",
+      "view": "pipeline",
+      "focus": [
+        "service:dbt",
+        "store:raw",
+        "store:lake"
+      ],
+      "reveal": "cumulative",
+      "trace": [
+        {
+          "relation": "rel:dbt-reads-raw"
+        },
+        {
+          "relation": "rel:dbt-reads-raw",
+          "return": true
+        },
+        {
+          "relation": "rel:dbt-writes-lake"
+        }
+      ],
+      "labels": [
+        {
+          "target": "store:lake",
+          "text": "dim_client: one row per client"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "pii",
+      "title": "PII is masked in the lake",
+      "root": "scope:snowflake",
+      "focus": [
+        "concern:pii",
+        "store:lake"
+      ],
+      "labels": [
+        {
+          "target": "rel:pii-covers-lake",
+          "text": "Email and phone need PII_READER"
+        }
+      ],
+      "camera": "frame_focus"
+    }
+  ]
+}

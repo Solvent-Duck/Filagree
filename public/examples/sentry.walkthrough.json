@@ -1,0 +1,65 @@
+{
+  "schema_version": "walkthrough.0.1.0-draft.1",
+  "id": "walk:sentry-event-trace",
+  "model_id": "example-sentry-self-hosted",
+  "expected_revision": 1,
+  "title": "Following an error event through Sentry",
+  "steps": [
+    {
+      "id": "overview",
+      "title": "Self-hosted Sentry",
+      "focus": ["scope:sentry"],
+      "context": "show",
+      "camera": "overview"
+    },
+    {
+      "id": "edge",
+      "title": "An SDK sends the event to nginx, then Relay",
+      "focus": ["client:sdk", "service:nginx", "service:relay"],
+      "trace": [
+        { "relation": "rel:requests-sdk--nginx" },
+        { "relation": "rel:requests-nginx--relay" }
+      ],
+      "labels": [{ "target": "service:relay", "text": "Ingest edge" }],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "publish",
+      "title": "Relay publishes the event to Kafka",
+      "focus": ["service:relay", "service:kafka"],
+      "reveal": "cumulative",
+      "trace": [
+        { "relation": "rel:requests-sdk--nginx" },
+        { "relation": "rel:requests-nginx--relay" },
+        { "relation": "rel:publishes-relay--kafka" }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "store",
+      "title": "The Snuba errors consumer writes it to ClickHouse",
+      "focus": ["service:kafka", "service:snuba-errors-consumer", "store:clickhouse"],
+      "trace": [
+        { "relation": "rel:publishes-relay--kafka" },
+        { "relation": "rel:subscribes-snuba-errors-consumer--kafka" },
+        { "relation": "rel:writes-snuba-errors-consumer--clickhouse" }
+      ],
+      "labels": [{ "target": "store:clickhouse", "text": "Event storage" }],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "read",
+      "title": "The web app reads it back through Snuba",
+      "focus": ["client:browser", "service:nginx", "service:web", "service:snuba-api", "store:clickhouse"],
+      "trace": [
+        { "relation": "rel:requests-browser--nginx" },
+        { "relation": "rel:requests-nginx--web" },
+        { "relation": "rel:requests-web--snuba-api" },
+        { "relation": "rel:reads-snuba-api--clickhouse" },
+        { "relation": "rel:reads-snuba-api--clickhouse", "return": true },
+        { "relation": "rel:requests-web--snuba-api", "return": true }
+      ],
+      "camera": "follow_trace"
+    }
+  ]
+}

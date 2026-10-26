@@ -1,10 +1,13 @@
 tier: scratch
-stack: <fill in>
-check: <lint + typecheck + test command, once there is one>
+stack: rust
+check: none (scratch)
 
 # Filagree
 
-Hackathon repo. Started 2026-10-26.
+Hackathon demo: Visualyze as a live, conversation-driven MCP for Claude Code and CoCo (Snowflake Cortex Code). Demo quality only, not a product. Started 2026-10-26.
+
+- The Rust workspace is a fresh copy of Visualyze at 523a4dc; build with `cargo build --locked`, binary at `target/debug/visualyze`.
+- `demo/acme-data/` is the made-up repo the agent reads live; `demo/fallback/` holds a validated model and walkthrough. Run steps in `demo/README.md`.
 
 ## Visualyze reference
 

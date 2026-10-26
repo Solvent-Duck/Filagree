@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "pairs": "private/layout/evaluation/calibration-v1/pairs.json",
+  "picks": "private/layout/evaluation/calibration-v1/picks-2026-10-05.json",
+  "priors": "private/layout/evaluation/calibration-v1/priors.json",
+  "judgments": {
+    "fit": 77,
+    "test": 39,
+    "fit_same": 15,
+    "test_same": 15,
+    "repeats_answered": 12,
+    "repeat_consistency": 0.75
+  },
+  "component_spread_mean_abs_diff": {
+    "route_length": 7.741031570823713,
+    "bends": 8.487179487179487,
+    "compactness": 0.1858187523134148,
+    "aspect_ratio": 0.5760887871008762,
+    "occlusion": 0.0664622685415401,
+    "distortion": 0.21537178733756782,
+    "congestion": 0.5865674638036751
+  },
+  "weights": {
+    "current": {
+      "route_length": 1.0,
+      "bends": 0.3,
+      "compactness": 2.0,
+      "aspect_ratio": 1.5,
+      "occlusion": 2.0,
+      "distortion": 0.25,
+      "congestion": 1.0
+    },
+    "prior": {
+      "route_length": 0.17136354819660793,
+      "bends": 0.20839756225762016,
+      "compactness": 4.759227724734313,
+      "aspect_ratio": 0.7675498791045614,
+      "occlusion": 26.61220500569598,
+      "distortion": 2.0530863599126614,
+      "congestion": 4.523028359180537
+    },
+    "fitted": {
+      "route_length": 0.14821091341292789,
+      "bends": 0.5568850084871105,
+      "compactness": 5.216935688805333,
+      "aspect_ratio": 0.6030217450108046,
+      "occlusion": 16.927969091815154,
+      "distortion": 1.6994683518010716,
+      "congestion": 1.9555358632117492
+    }
+  },
+  "fitted_90pct_bootstrap_interval": {
+    "route_length": [
+      0.05717740906926821,
+      0.19768841696638803
+    ],
+    "bends": [
+      0.19600879947083968,
+      0.790808026338202
+    ],
+    "compactness": [
+      3.7231040683800227,
+      11.353333317419123
+    ],
+    "aspect_ratio": [
+      0.2512045286998098,
+      0.7675313389843529
+    ],
+    "occlusion": [
+      6.214500045805089,
+      26.602781855825068
+    ],
+    "distortion": [
+      0.7357143859849862,
+      2.324954838961136
+    ],
+    "congestion": [
+      0.7887828222103067,
+      4.516349652612137
+    ]
+  },
+  "share_of_typical_difference": {
+    "current": {
+      "route_length": 0.629541992732702,
+      "bends": 0.20706681679908998,
+      "compactness": 0.030223544897916944,
+      "aspect_ratio": 0.07027592118136641,
+      "occlusion": 0.010810132628027738,
+      "distortion": 0.004378795737312458,
+      "congestion": 0.04770279602358464
+    },
+    "prior": {
+      "route_length": 0.14285714285714288,
+      "bends": 0.1904761904761905,
+      "compactness": 0.09523809523809525,
+      "aspect_ratio": 0.047619047619047616,
+      "occlusion": 0.1904761904761905,
+      "distortion": 0.047619047619047616,
+      "congestion": 0.2857142857142857
+    },
+    "fitted": {
+      "route_length": 0.1167309614462742,
+      "bends": 0.4808791569124309,
+      "compactness": 0.0986306880521983,
+      "aspect_ratio": 0.035345117965804335,
+      "occlusion": 0.11446878110391669,
+      "distortion": 0.0372399366642572,
+      "congestion": 0.1167053578551183
+    }
+  },
+  "fit_accuracy": {
+    "current": 0.7419354838709677,
+    "prior": 0.6290322580645161,
+    "fitted": 0.6612903225806451
+  },
+  "test_accuracy": {
+    "current": 0.7916666666666666,
+    "prior": 0.75,
+    "fitted": 0.75
+  },
+  "test_log_loss": {
+    "current": 0.6543223719348402,
+    "prior": 0.6743803784614422,
+    "fitted": 0.6505681724953511
+  },
+  "prior_sd_sensitivity": {
+    "0.5": {
+      "weights": {
+        "route_length": 0.17927723350913977,
+        "bends": 0.24073864948069212,
+        "compactness": 4.873700316188704,
+        "aspect_ratio": 0.7533785793328704,
+        "occlusion": 25.19433549266167,
+        "distortion": 2.0262475711197854,
+        "congestion": 4.0355016383924
+      },
+      "test_accuracy": 0.75
+    },
+    "2.0": {
+      "weights": {
+        "route_length": 0.030155106845660713,
+        "bends": 0.40075518122346676,
+        "compactness": 10.484436272627583,
+        "aspect_ratio": 0.16210196105218938,
+        "occlusion": 4.227914269618969,
+        "distortion": 0.5453604156584027,
+        "congestion": 0.3130713659799967
+      },
+      "test_accuracy": 0.6666666666666666
+    }
+  },
+  "notes": "Accuracy counts decided (non-'same') judgments; a zero cost difference scores 0.5. Test rows are holdout-v1 views never used for fitting. One rater's preferences are not a population estimate."
+}

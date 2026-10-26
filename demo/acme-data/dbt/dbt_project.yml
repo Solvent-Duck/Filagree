@@ -1,0 +1,12 @@
+name: acme_lake
+version: "1.0.0"
+profile: acme_snowflake
+
+models:
+  acme_lake:
+    staging:
+      +schema: staging
+      +materialized: view
+    lake:
+      +schema: lake
+      +materialized: table
