@@ -1,0 +1,213 @@
+{
+  "schema_version": "walkthrough.0.1.0-draft.1",
+  "id": "walk:region-1997",
+  "model_id": "tpch-lake",
+  "expected_revision": 2,
+  "title": "Which region earned the most in 1997?",
+  "teaching_views": [
+    {
+      "id": "ask",
+      "title": "Answering out loud",
+      "layout": "pipeline",
+      "members": [
+        "client:voice",
+        "service:ask",
+        "store:revenue",
+        "service:llm"
+      ]
+    },
+    {
+      "id": "revenue",
+      "title": "Where the revenue comes from",
+      "layout": "pipeline",
+      "members": [
+        "store:lineitem",
+        "store:orders",
+        "store:customer",
+        "store:nation",
+        "store:region",
+        "service:refresh",
+        "store:revenue",
+        "client:dashboard"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "overview",
+      "title": "A question, out loud",
+      "focus": [
+        "client:voice",
+        "scope:ai",
+        "scope:mart"
+      ],
+      "labels": [
+        {
+          "target": "client:voice",
+          "text": "\"Which region earned the most in 1997?\""
+        }
+      ],
+      "camera": "overview"
+    },
+    {
+      "id": "inside-ai",
+      "title": "Inside Analytics & AI",
+      "root": "scope:ai",
+      "focus": [
+        "service:ask",
+        "service:llm",
+        "store:docs",
+        "client:dashboard"
+      ],
+      "camera": "frame_focus"
+    },
+    {
+      "id": "in-place",
+      "title": "Four boxes answer it",
+      "focus": [
+        "client:voice",
+        "service:ask",
+        "store:revenue",
+        "service:llm"
+      ],
+      "context": "dim",
+      "camera": "overview"
+    },
+    {
+      "id": "ask",
+      "title": "ASK_LAKE reads the revenue mart",
+      "view": "ask",
+      "focus": [
+        "client:voice",
+        "service:ask",
+        "store:revenue",
+        "service:llm"
+      ],
+      "trace": [
+        {
+          "relation": "rel:voice-requests-ask"
+        },
+        {
+          "relation": "rel:ask-reads-revenue"
+        },
+        {
+          "relation": "rel:ask-reads-revenue",
+          "return": true
+        },
+        {
+          "relation": "rel:ask-requests-llm"
+        },
+        {
+          "relation": "rel:ask-requests-llm",
+          "return": true
+        },
+        {
+          "relation": "rel:voice-requests-ask",
+          "return": true
+        }
+      ],
+      "labels": [
+        {
+          "target": "store:revenue",
+          "text": "SUM(net_revenue) by region and year"
+        },
+        {
+          "target": "service:llm",
+          "text": "llama3.3-70b, three spoken sentences"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "revenue",
+      "title": "Revenue joins five TPC-H tables",
+      "view": "revenue",
+      "focus": [
+        "service:refresh",
+        "store:lineitem",
+        "store:orders",
+        "store:customer",
+        "store:nation",
+        "store:region",
+        "store:revenue"
+      ],
+      "trace": [
+        {
+          "relation": "rel:refresh-reads-lineitem"
+        },
+        {
+          "relation": "rel:refresh-reads-lineitem",
+          "return": true
+        },
+        {
+          "relation": "rel:refresh-reads-orders"
+        },
+        {
+          "relation": "rel:refresh-reads-orders",
+          "return": true
+        },
+        {
+          "relation": "rel:refresh-reads-region"
+        },
+        {
+          "relation": "rel:refresh-reads-region",
+          "return": true
+        },
+        {
+          "relation": "rel:refresh-writes-revenue"
+        }
+      ],
+      "labels": [
+        {
+          "target": "store:revenue",
+          "text": "l_extendedprice x (1 - l_discount)"
+        },
+        {
+          "target": "store:region",
+          "text": "r_name: the answer's region"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "dashboard",
+      "title": "The dashboard reads the same mart",
+      "view": "revenue",
+      "focus": [
+        "client:dashboard",
+        "store:revenue"
+      ],
+      "trace": [
+        {
+          "relation": "rel:dashboard-reads-revenue"
+        },
+        {
+          "relation": "rel:dashboard-reads-revenue",
+          "return": true
+        }
+      ],
+      "labels": [
+        {
+          "target": "client:dashboard",
+          "text": "Same number, on a chart"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "recap",
+      "title": "Spoken question, mart answer",
+      "focus": [
+        "client:voice",
+        "service:ask",
+        "service:llm",
+        "store:revenue",
+        "service:refresh",
+        "client:dashboard",
+        "scope:tpch"
+      ],
+      "reveal": "cumulative",
+      "camera": "overview"
+    }
+  ]
+}

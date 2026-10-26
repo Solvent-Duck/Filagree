@@ -2,7 +2,7 @@
   "schema_version": "walkthrough.0.1.0-draft.1",
   "id": "walk:question-to-answer",
   "model_id": "tpch-lake",
-  "expected_revision": 1,
+  "expected_revision": 2,
   "title": "From TPC-H tables to a spoken answer",
   "teaching_views": [
     {
