@@ -19,6 +19,7 @@ use visualyze_mcp::protocol::{self, Request, Response};
 use visualyze_model::{architecture::Architecture, walkthrough::Walkthrough};
 
 use crate::{
+    camera::RemoteCamera,
     layout_scene::{LayoutStatus, Published, ViewerAction, ViewerActions},
     playback::{Control, Playback},
     report,
@@ -237,6 +238,7 @@ pub(crate) fn serve_requests(
     status: Res<LayoutStatus>,
     mut playback: ResMut<Playback>,
     transition: Option<Res<crate::transition::SceneTransition>>,
+    mut remote: ResMut<RemoteCamera>,
 ) {
     let mut finished = Vec::new();
     for (i, pending) in served.pending.iter().enumerate() {
@@ -306,6 +308,8 @@ pub(crate) fn serve_requests(
             .map(|result| Some(Response::ok(id, result))),
             "control" => control(&request.params, &mut playback)
                 .map(|()| Some(Response::ok(id, playback.state()))),
+            "camera" => camera(&request.params, &mut remote)
+                .map(|()| Some(Response::ok(id, json!({"ok": true})))),
             other => Err(Response::err(
                 id,
                 "unknown_method",
@@ -454,6 +458,34 @@ fn present(
     let autoplay = params["autoplay"].as_bool().unwrap_or(false);
     playback.start(walkthrough, model, start, autoplay, !single_view);
     Ok(result)
+}
+
+/// `{"orbit": [yaw, pitch], "zoom": z, "home": bool}`, all optional. Orbit is in
+/// radians and zoom is in log distance, as with the mouse and keyboard.
+fn camera(params: &Value, remote: &mut RemoteCamera) -> Result<(), Response> {
+    let number = |value: &Value| match value.as_f64() {
+        Some(n) if n.is_finite() => Ok((n as f32).clamp(-1.0, 1.0)),
+        _ => Err(Response::err(
+            0,
+            "invalid_request",
+            "camera values must be numbers",
+        )),
+    };
+    if let Some(orbit) = params.get("orbit").filter(|v| !v.is_null()) {
+        let [yaw, pitch] = orbit.as_array().map(Vec::as_slice).unwrap_or_default() else {
+            return Err(Response::err(
+                0,
+                "invalid_request",
+                "orbit must be [yaw, pitch]",
+            ));
+        };
+        remote.orbit += Vec2::new(number(yaw)?, number(pitch)?);
+    }
+    if let Some(zoom) = params.get("zoom").filter(|v| !v.is_null()) {
+        remote.zoom += number(zoom)?;
+    }
+    remote.home |= params["home"].as_bool().unwrap_or(false);
+    Ok(())
 }
 
 fn control(params: &Value, playback: &mut Playback) -> Result<(), Response> {
