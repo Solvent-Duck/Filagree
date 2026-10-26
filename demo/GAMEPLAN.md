@@ -35,7 +35,13 @@ Demo arc, three questions:
 
 B and C1 run in parallel because they touch different files. C2 waits for B's IDs.
 
-### A: make Snowflake real (you, no Claude needed)
+### A: make Snowflake real. Done at 18:44.
+
+Account `me41954.us-east-2.aws`, connection name `QN29986` (not `filagree`).
+`llama3.3-70b` runs natively there, with no cross-region inference needed.
+CoCo ran all three SQL files unchanged. `ASK_LAKE` says AMERICA earned the most
+in 1997 (6.656B), and CoCo checked that against the mart. `ask.py` works with
+`SNOWFLAKE_CONNECTION=QN29986` and needs no browser prompt.
 
 The live demo and the "how CoCo helped" claim both depend on this, so it goes first.
 

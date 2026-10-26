@@ -64,8 +64,8 @@ BEGIN
     'You answer questions about the TPC-H sample dataset for someone looking at a 3D map '
     || 'of it, not at SQL. Answer in at most three spoken sentences, using only the facts below. '
     || 'Name the table the answer comes from.\n\nTables:\n' || :docs
-    || '\n\nNet revenue by region and year:\n' || :revenue
-    || '\n\nTop 10 suppliers by margin:\n' || :suppliers
+    || '\n\nFrom table REVENUE_BY_NATION_MONTH, net revenue by region and year:\n' || :revenue
+    || '\n\nFrom table SUPPLIER_SCORECARD, top 10 suppliers by margin:\n' || :suppliers
     || '\n\nSelected box: ' || COALESCE(:focus_table, 'none')
     || '\n\nQuestion: ' || :question
   ) INTO :answer;
