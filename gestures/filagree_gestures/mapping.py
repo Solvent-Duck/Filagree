@@ -18,7 +18,7 @@ MIN_SCORE = 0.6
 # through gaps this short so rotations and swipes don't restart.
 GRACE_MS = 250
 # Radians of yaw per radian the palm turns; deadband ignores tracking jitter.
-DIAL_GAIN = 1.5
+DIAL_GAIN = 2.5
 DIAL_DEADBAND = 0.004
 # Zoom per unit change in log palm size; deadband ignores tracking jitter.
 ZOOM_GAIN = 2.5
