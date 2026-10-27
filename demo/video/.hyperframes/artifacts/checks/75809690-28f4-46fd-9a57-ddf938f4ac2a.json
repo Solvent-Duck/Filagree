@@ -1,0 +1,375 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "filesScanned": 8
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 3,
+    "findings": [
+      {
+        "code": "content_overlap",
+        "severity": "info",
+        "time": 23.051,
+        "selector": "#q1-region",
+        "message": "Two text blocks overlap and may render unreadable.",
+        "rect": {
+          "left": 120,
+          "top": 310,
+          "right": 971.41,
+          "bottom": 540,
+          "width": 851.41,
+          "height": 230
+        },
+        "containerSelector": "#q2-qtext > span:nth-of-type(1)",
+        "text": "AMERICA",
+        "fixHint": "Give each block its own zone, or put data-layout-allow-overlap on the text or on a container inside the scene. A marker on the scene root does not apply.",
+        "dataAttributes": {},
+        "sourceFile": "compositions/q1.html",
+        "bbox": {
+          "x": 120,
+          "y": 310,
+          "width": 851.41,
+          "height": 230
+        },
+        "firstSeen": 23.051,
+        "lastSeen": 23.051,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          23.051
+        ]
+      },
+      {
+        "code": "text_occluded",
+        "severity": "info",
+        "time": 43.333,
+        "selector": "#q3-qtext > span:nth-of-type(1)",
+        "message": "Text is hidden beneath an opaque element.",
+        "rect": {
+          "left": 120,
+          "top": 146,
+          "right": 1410.24,
+          "bottom": 196.4,
+          "width": 1290.24,
+          "height": 50.4
+        },
+        "containerSelector": "#q3-dim",
+        "text": "“What if orders streamed in instead of loading nightly?”",
+        "fixHint": "Give the text its own zone, raise its stacking order above the covering element, or mark intentional layering with data-layout-allow-occlusion.",
+        "coveredFraction": 1,
+        "dataAttributes": {
+          "data-var-text": "q3Question"
+        },
+        "sourceFile": "compositions/q3.html",
+        "bbox": {
+          "x": 120,
+          "y": 146,
+          "width": 1290.24,
+          "height": 50.4
+        },
+        "firstSeen": 43.333,
+        "lastSeen": 43.333,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          43.333
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 50,
+        "selector": "#hd-img",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 37.37,
+          "top": -103.28,
+          "right": 1832.49,
+          "bottom": 1171.06,
+          "width": 1795.12,
+          "height": 1274.35
+        },
+        "containerSelector": "#hands > div:nth-of-type(1)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 0,
+          "top": 0,
+          "right": 1920,
+          "bottom": 1080,
+          "width": 1920,
+          "height": 1080
+        },
+        "overflow": {
+          "top": 103.28,
+          "bottom": 91.06
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hd-img",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/hands.html",
+        "bbox": {
+          "x": 37.37,
+          "y": -103.28,
+          "width": 1795.12,
+          "height": 1274.35
+        },
+        "firstSeen": 50,
+        "lastSeen": 50,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          50
+        ]
+      }
+    ],
+    "duration": 60,
+    "samples": [
+      3.333,
+      10,
+      16.667,
+      23.333,
+      30,
+      36.667,
+      43.333,
+      50,
+      56.667
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 3,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      3.333,
+      16.667,
+      30,
+      43.333,
+      56.667
+    ],
+    "checked": 12,
+    "passed": 12
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 5,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "first_frame_empty",
+        "severity": "warning",
+        "message": "Frame 0 shows only the background, and the first frame is the thumbnail on social players: have the title or key image already on screen at 0 s instead of entering from nothing; see references/review.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"01 · ASK THE DATA\" renders at 26 px for 2.38 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "01 · ASK THE DATA",
+        "selector": "#q1-kick",
+        "dataAttributes": {},
+        "sourceFile": "compositions/q1.html",
+        "bbox": {
+          "x": 110.35,
+          "y": 92,
+          "width": 327.1,
+          "height": 35
+        },
+        "time": 9.5,
+        "times": [
+          9.5
+        ],
+        "fontPx": 26,
+        "floorPx": 28,
+        "seconds": 2.375,
+        "elements": [
+          {
+            "selector": "#q1-kick",
+            "text": "01 · ASK THE DATA",
+            "fontPx": 26,
+            "time": 9.5,
+            "seconds": 2.375
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"02 · ASK HOW IT WORKS\" renders at 26 px for 2.13 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "02 · ASK HOW IT WORKS",
+        "selector": "#q2-kick",
+        "dataAttributes": {},
+        "sourceFile": "compositions/q2.html",
+        "bbox": {
+          "x": 118.84,
+          "y": 92,
+          "width": 404.05,
+          "height": 35
+        },
+        "time": 23,
+        "times": [
+          23
+        ],
+        "fontPx": 26,
+        "floorPx": 28,
+        "seconds": 2.125,
+        "elements": [
+          {
+            "selector": "#q2-kick",
+            "text": "02 · ASK HOW IT WORKS",
+            "fontPx": 26,
+            "time": 23,
+            "seconds": 2.125
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"03 · ASK WHAT IF\" renders at 26 px for 2.38 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "03 · ASK WHAT IF",
+        "selector": "#q3-kick",
+        "dataAttributes": {},
+        "sourceFile": "compositions/q3.html",
+        "bbox": {
+          "x": 118.84,
+          "y": 92,
+          "width": 307.84,
+          "height": 35
+        },
+        "time": 34,
+        "times": [
+          34
+        ],
+        "fontPx": 26,
+        "floorPx": 28,
+        "seconds": 2.375,
+        "elements": [
+          {
+            "selector": "#q3-kick",
+            "text": "03 · ASK WHAT IF",
+            "fontPx": 26,
+            "time": 34,
+            "seconds": 2.375
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"Llama 3.3 70B · Snowflake Cortex · CoCo · Cla...\" renders at 27 px for 5.13 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Llama 3.3 70B · Snowflake Cortex · CoCo · Claude Code · MediaPipe · Rust + Bevy",
+        "selector": "#en-built",
+        "dataAttributes": {},
+        "sourceFile": "compositions/end.html",
+        "bbox": {
+          "x": 320.09,
+          "y": 735,
+          "width": 1279.82,
+          "height": 36
+        },
+        "time": 54.875,
+        "times": [
+          54.875
+        ],
+        "fontPx": 27,
+        "floorPx": 28,
+        "seconds": 5.125,
+        "elements": [
+          {
+            "selector": "#en-built",
+            "text": "Llama 3.3 70B · Snowflake Cortex · CoCo · Claude Code · MediaPipe · Rust + Bevy",
+            "fontPx": 27,
+            "time": 54.875,
+            "seconds": 5.125
+          }
+        ]
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 480
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 1,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "audio_clip_silent",
+        "severity": "warning",
+        "message": "assets/sfx/riser.mp3 is silent for the whole part this clip plays (7-10 s of the file).",
+        "selector": "#sfx-riser",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 49.95,
+        "timeRange": [
+          49.95,
+          52.95
+        ],
+        "fixHint": "Check the file has sound there, or move data-media-start to where it does."
+      }
+    ]
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

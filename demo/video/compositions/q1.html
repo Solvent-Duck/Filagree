@@ -1,0 +1,59 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    #root { background: #0d1017; }
+    .shot { position: absolute; inset: 0; opacity: 0; overflow: hidden; }
+    .shot img { position: absolute; left: 192px; top: 0; width: 1536px; height: 1080px; }
+    #q1-kick { position: absolute; left: 120px; top: 92px; font-size: 32px; font-weight: 700; letter-spacing: 0.14em; color: #34c3a9; z-index: 5; }
+    #q1-q { position: absolute; left: 120px; top: 440px; width: 1680px; z-index: 6; transform-origin: 0 0; }
+    #q1-qtext { display: inline-block; font-size: 64px; line-height: 1.2; color: #ffffff; font-weight: 700; white-space: nowrap; }
+    #q1-qtext .typed { display: inline-block; overflow: hidden; vertical-align: bottom; white-space: nowrap; }
+    #q1-wave { display: inline-flex; gap: 8px; align-items: center; height: 64px; margin-right: 30px; vertical-align: middle; }
+    #q1-wave i { display: block; width: 10px; height: 56px; border-radius: 5px; background: #34c3a9; transform-origin: 50% 50%; }
+    #q1-qbg { position: absolute; left: 0; right: 0; top: 0; height: 200px; background: linear-gradient(#0d1017 55%, rgba(13,16,23,0)); z-index: 4; opacity: 0; }
+  </style>
+  <div data-hf-id="hf-187s" id="root" data-composition-id="q1" data-width="1920" data-height="1080" data-layout-allow-overflow>
+    <div data-hf-id="hf-mcqr" class="q1-shot shot" id="q1-s0"><img data-hf-id="hf-f2zz" id="q1-i0" src="assets/frames/region-1997-step-0.jpg" alt=""></div><div data-hf-id="hf-iemq" class="q1-shot shot" id="q1-s1"><img data-hf-id="hf-5ken" id="q1-i1" src="assets/frames/region-1997-step-3.jpg" alt=""></div><div data-hf-id="hf-egip" class="q1-shot shot" id="q1-s2"><img data-hf-id="hf-c5rp" id="q1-i2" src="assets/frames/region-1997-step-4.jpg" alt=""></div>
+    <div data-hf-id="hf-jq14" id="q1-qbg"></div>
+    <div data-hf-id="hf-4208" id="q1-kick" class="mono">01 · ASK THE DATA</div>
+    <div data-hf-id="hf-cnud" id="q1-q"><span data-hf-id="hf-yqwi" id="q1-wave"><i data-hf-id="hf-wt6k"></i><i data-hf-id="hf-zeb8"></i><i data-hf-id="hf-y7e5"></i><i data-hf-id="hf-ylp6"></i><i data-hf-id="hf-0l8b"></i></span><span data-hf-id="hf-5pf7" id="q1-qtext" class="mono"><span data-hf-id="hf-k5d9" class="typed" data-var-text="q1Question">“Which region earned the most in 1997?”</span></span></div>
+    <div data-hf-id="hf-khi4" id="q1-dim" style="position:absolute;inset:0;background:#0d1017;opacity:0;z-index:7"></div>
+    <div data-hf-id="hf-82dm" id="q1-ans" style="position:absolute;left:120px;top:330px;z-index:8;color:#fff">
+      <div data-hf-id="hf-61ue" id="q1-region" style="font-weight:900;font-size:190px;letter-spacing:-0.05em;line-height:1">AMERICA</div>
+      <div data-hf-id="hf-vniv" style="font-weight:900;font-size:120px;letter-spacing:-0.04em;line-height:1.1;color:#34c3a9"><span data-hf-id="hf-ut84" id="q1-num">6.656</span> billion</div>
+      <div data-hf-id="hf-ap1o" class="mono" style="font-size:30px;color:#9aa8b6;margin-top:36px">Answered by Llama 3.3 70B in Snowflake Cortex<br data-hf-id="hf-x5px">from the table <span data-hf-id="hf-xkt9" style="color:#fff">Revenue by nation and month</span></div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const shots = [{"src": "region-1997-step-0.jpg", "at": 2.5, "origin": "45% 35%"}, {"src": "region-1997-step-3.jpg", "at": 4.6, "origin": "60% 30%", "to": 1.2}, {"src": "region-1997-step-4.jpg", "at": 6.9, "origin": "35% 45%", "to": 1.18}];
+    tl.fromTo("#root", { xPercent: 0, filter: "blur(0px)" },
+      { xPercent: 0, filter: "blur(0px)", duration: 0.01, ease: "power3.out" }, 0);
+    tl.fromTo("#q1-kick", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.3, ease: "power3.out" }, 0.25);
+    tl.fromTo("#q1-qtext .typed", { width: "0ch" }, { width: "39ch", duration: 1.18, ease: "steps(39)" }, 0.4);
+    tl.fromTo("#q1-wave i", { scaleY: 0.25 }, { scaleY: 1, duration: 0.16, ease: "sine.inOut", stagger: { each: 0.06, repeat: 9, yoyo: true } }, 0.35);
+    // the question docks at the top and becomes the header of the tour
+    const dock = shots[0].at;
+    tl.to("#q1-q", { y: -330, scale: 0.6, duration: 0.5, ease: "power3.inOut" }, dock);
+    tl.to("#q1-kick", { opacity: 0, duration: 0.2 }, dock);
+    tl.to("#q1-wave i", { scaleY: 0.25, duration: 0.2 }, dock);
+    tl.fromTo("#q1-qbg", { opacity: 0 }, { opacity: 1, duration: 0.3 }, dock);
+    shots.forEach((s, i) => {
+      const next = i + 1 < shots.length ? shots[i + 1].at : 13.4;
+      tl.fromTo("#q1-s" + i, { opacity: 0 }, { opacity: 1, duration: i === 0 ? 0.4 : 0.22, ease: "power2.out" }, s.at);
+      tl.fromTo("#q1-i" + i, { scale: s.from || 1.0, transformOrigin: s.origin || "50% 40%" },
+        { scale: s.to || 1.12, duration: next - s.at, ease: "power1.inOut" }, s.at);
+      if (i + 1 < shots.length) tl.to("#q1-s" + i, { opacity: 0, duration: 0.22 }, next);
+    });
+    
+    tl.fromTo("#q1-dim", { opacity: 0 }, { opacity: 0.88, duration: 0.3 }, 9.2);
+    tl.fromTo("#q1-ans", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.35, ease: "power4.out" }, 9.3);
+    const num = { v: 0 };
+    tl.fromTo(num, { v: 0 }, { v: 6.656, duration: 0.9, ease: "power2.out",
+      onUpdate: () => { document.querySelector("#q1-num").textContent = num.v.toFixed(3); } }, 9.4);
+
+    window.__timelines["q1"] = tl;
+  </script>
+</template>

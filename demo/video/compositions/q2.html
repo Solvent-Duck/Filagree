@@ -1,0 +1,48 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    #root { background: #0d1017; }
+    .shot { position: absolute; inset: 0; opacity: 0; overflow: hidden; }
+    .shot img { position: absolute; left: 192px; top: 0; width: 1536px; height: 1080px; }
+    #q2-kick { position: absolute; left: 120px; top: 92px; font-size: 32px; font-weight: 700; letter-spacing: 0.14em; color: #5aa9e6; z-index: 5; }
+    #q2-q { position: absolute; left: 120px; top: 440px; width: 1680px; z-index: 6; transform-origin: 0 0; }
+    #q2-qtext { display: inline-block; font-size: 54px; line-height: 1.2; color: #ffffff; font-weight: 700; white-space: nowrap; }
+    #q2-qtext .typed { display: inline-block; overflow: hidden; vertical-align: bottom; white-space: nowrap; }
+    #q2-wave { display: inline-flex; gap: 8px; align-items: center; height: 64px; margin-right: 30px; vertical-align: middle; }
+    #q2-wave i { display: block; width: 10px; height: 56px; border-radius: 5px; background: #5aa9e6; transform-origin: 50% 50%; }
+    #q2-qbg { position: absolute; left: 0; right: 0; top: 0; height: 200px; background: linear-gradient(#0d1017 55%, rgba(13,16,23,0)); z-index: 4; opacity: 0; }
+  </style>
+  <div data-hf-id="hf-terl" id="root" data-composition-id="q2" data-width="1920" data-height="1080" data-layout-allow-overflow>
+    <div data-hf-id="hf-zh9n" class="q2-shot shot" id="q2-s0"><img data-hf-id="hf-h9xb" id="q2-i0" src="assets/frames/customer-order-step-3.jpg" alt=""></div><div data-hf-id="hf-vj5m" class="q2-shot shot" id="q2-s1"><img data-hf-id="hf-6uy9" id="q2-i1" src="assets/frames/customer-order-step-4.jpg" alt=""></div><div data-hf-id="hf-rl1l" class="q2-shot shot" id="q2-s2"><img data-hf-id="hf-0edb" id="q2-i2" src="assets/frames/customer-order-step-5.jpg" alt=""></div><div data-hf-id="hf-qtds" class="q2-shot shot" id="q2-s3"><img data-hf-id="hf-3ptp" id="q2-i3" src="assets/frames/customer-order-step-6.jpg" alt=""></div>
+    <div data-hf-id="hf-8smv" id="q2-qbg"></div>
+    <div data-hf-id="hf-zmrs" id="q2-kick" class="mono">02 · ASK HOW IT WORKS</div>
+    <div data-hf-id="hf-vt4e" id="q2-q"><span data-hf-id="hf-kus7" id="q2-wave"><i data-hf-id="hf-wt6k"></i><i data-hf-id="hf-zeb8"></i><i data-hf-id="hf-y7e5"></i><i data-hf-id="hf-ylp6"></i><i data-hf-id="hf-0l8b"></i></span><span data-hf-id="hf-vmo8" id="q2-qtext" class="mono"><span data-hf-id="hf-qk5i" class="typed" data-var-text="q2Question">“Walk me through how a customer orders a part.”</span></span></div>
+    
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const shots = [{"src": "customer-order-step-3.jpg", "at": 2.4, "origin": "65% 30%", "to": 1.16}, {"src": "customer-order-step-4.jpg", "at": 4.5, "origin": "35% 40%", "to": 1.16}, {"src": "customer-order-step-5.jpg", "at": 6.6, "origin": "45% 50%", "to": 1.12}, {"src": "customer-order-step-6.jpg", "at": 8.7, "origin": "50% 40%", "to": 1.14}];
+    tl.fromTo("#root", { xPercent: 30, filter: "blur(24px)" },
+      { xPercent: 0, filter: "blur(0px)", duration: 0.45, ease: "power3.out" }, 0);
+    tl.fromTo("#q2-kick", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.3, ease: "power3.out" }, 0.25);
+    tl.fromTo("#q2-qtext .typed", { width: "0ch" }, { width: "47ch", duration: 1.44, ease: "steps(47)" }, 0.4);
+    tl.fromTo("#q2-wave i", { scaleY: 0.25 }, { scaleY: 1, duration: 0.16, ease: "sine.inOut", stagger: { each: 0.06, repeat: 11, yoyo: true } }, 0.35);
+    // the question docks at the top and becomes the header of the tour
+    const dock = shots[0].at;
+    tl.to("#q2-q", { y: -330, scale: 0.6, duration: 0.5, ease: "power3.inOut" }, dock);
+    tl.to("#q2-kick", { opacity: 0, duration: 0.2 }, dock);
+    tl.to("#q2-wave i", { scaleY: 0.25, duration: 0.2 }, dock);
+    tl.fromTo("#q2-qbg", { opacity: 0 }, { opacity: 1, duration: 0.3 }, dock);
+    shots.forEach((s, i) => {
+      const next = i + 1 < shots.length ? shots[i + 1].at : 11;
+      tl.fromTo("#q2-s" + i, { opacity: 0 }, { opacity: 1, duration: i === 0 ? 0.4 : 0.22, ease: "power2.out" }, s.at);
+      tl.fromTo("#q2-i" + i, { scale: s.from || 1.0, transformOrigin: s.origin || "50% 40%" },
+        { scale: s.to || 1.12, duration: next - s.at, ease: "power1.inOut" }, s.at);
+      if (i + 1 < shots.length) tl.to("#q2-s" + i, { opacity: 0, duration: 0.22 }, next);
+    });
+    
+    window.__timelines["q2"] = tl;
+  </script>
+</template>

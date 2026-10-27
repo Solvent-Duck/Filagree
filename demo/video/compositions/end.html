@@ -1,0 +1,40 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    #root { background: #ffffff; color: #0d1017; }
+    #en-lock { position: absolute; left: 0; right: 0; top: 300px; display: flex; justify-content: center; align-items: center; gap: 44px; }
+    #en-mark { position: relative; width: 150px; height: 190px; }
+    .en-cube { position: absolute; left: 15px; width: 120px; height: 50px; border-radius: 12px; }
+    #en-word { font-weight: 900; font-size: 210px; letter-spacing: -0.06em; line-height: 1; }
+    #en-claim { position: absolute; left: 0; right: 0; top: 590px; text-align: center; font-size: 62px; font-weight: 800; letter-spacing: -0.03em; }
+    #en-built { position: absolute; left: 0; right: 0; top: 735px; text-align: center; font-size: 30px; color: #5b6570; }
+    #en-repo { position: absolute; left: 0; right: 0; top: 820px; text-align: center; font-size: 34px; font-weight: 700; }
+  </style>
+  <div data-hf-id="hf-gwfo" id="root" data-composition-id="end" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-oa1k" id="en-lock">
+      <div data-hf-id="hf-to2e" id="en-mark">
+        <div data-hf-id="hf-uhmr" class="en-cube" id="en-c1" style="top:0;background:#5aa9e6"></div>
+        <div data-hf-id="hf-2gze" class="en-cube" id="en-c2" style="top:68px;background:#8b78ee"></div>
+        <div data-hf-id="hf-dm93" class="en-cube" id="en-c3" style="top:136px;background:#34c3a9"></div>
+      </div>
+      <div data-hf-id="hf-e46o" id="en-word">Filagree</div>
+    </div>
+    <div data-hf-id="hf-g1zm" id="en-claim" data-var-text="claim">Stop reading code. Ask your system.</div>
+    <div data-hf-id="hf-hylx" id="en-built" class="mono">Llama 3.3 70B · Snowflake Cortex · CoCo · Claude Code · MediaPipe · Rust + Bevy</div>
+    <div data-hf-id="hf-c6f0" id="en-repo" class="mono">github.com/Solvent-Duck/Filagree · MIT</div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#root", { clipPath: "circle(0% at 50% 50%)" }, { clipPath: "circle(150% at 50% 50%)", duration: 0.5, ease: "power3.in" }, 0);
+    ["#en-c3", "#en-c2", "#en-c1"].forEach((id, i) => {
+      tl.fromTo(id, { y: -700, opacity: 1 }, { y: 0, duration: 0.42, ease: "bounce.out" }, 0.35 + i * 0.14);
+    });
+    tl.fromTo("#en-word", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.5, ease: "power4.out" }, 0.95);
+    tl.fromTo("#en-claim", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 1.55);
+    tl.fromTo("#en-built", { opacity: 0 }, { opacity: 1, duration: 0.35 }, 2.1);
+    tl.fromTo("#en-repo", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 2.45);
+    window.__timelines["end"] = tl;
+  </script>
+</template>

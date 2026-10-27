@@ -1,0 +1,60 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    #root { background: #0d1017; }
+    .shot { position: absolute; inset: 0; opacity: 0; overflow: hidden; }
+    .shot img { position: absolute; left: 192px; top: 0; width: 1536px; height: 1080px; }
+    #q3-kick { position: absolute; left: 120px; top: 92px; font-size: 32px; font-weight: 700; letter-spacing: 0.14em; color: #8b78ee; z-index: 5; }
+    #q3-q { position: absolute; left: 120px; top: 440px; width: 1680px; z-index: 6; transform-origin: 0 0; }
+    #q3-qtext { display: inline-block; font-size: 46px; line-height: 1.2; color: #ffffff; font-weight: 700; white-space: nowrap; }
+    #q3-qtext .typed { display: inline-block; overflow: hidden; vertical-align: bottom; white-space: nowrap; }
+    #q3-wave { display: inline-flex; gap: 8px; align-items: center; height: 64px; margin-right: 30px; vertical-align: middle; }
+    #q3-wave i { display: block; width: 10px; height: 56px; border-radius: 5px; background: #8b78ee; transform-origin: 50% 50%; }
+    #q3-qbg { position: absolute; left: 0; right: 0; top: 0; height: 200px; background: linear-gradient(#0d1017 55%, rgba(13,16,23,0)); z-index: 4; opacity: 0; }
+  </style>
+  <div data-hf-id="hf-1xuq" id="root" data-composition-id="q3" data-width="1920" data-height="1080" data-layout-allow-overflow>
+    <div data-hf-id="hf-bewv" class="q3-shot shot" id="q3-s0"><img data-hf-id="hf-bwtw" id="q3-i0" src="assets/frames/proposal-streaming-step-1.jpg" alt=""></div><div data-hf-id="hf-7gsu" class="q3-shot shot" id="q3-s1"><img data-hf-id="hf-hznq" id="q3-i1" src="assets/frames/proposal-streaming-step-2.jpg" alt=""></div><div data-hf-id="hf-3iot" class="q3-shot shot" id="q3-s2"><img data-hf-id="hf-pw9k" id="q3-i2" src="assets/frames/proposal-streaming-step-3.jpg" alt=""></div>
+    <div data-hf-id="hf-3pym" id="q3-qbg"></div>
+    <div data-hf-id="hf-17oe" id="q3-kick" class="mono">03 · ASK WHAT IF</div>
+    <div data-hf-id="hf-itdn" id="q3-q"><span data-hf-id="hf-aqd4" id="q3-wave"><i data-hf-id="hf-wt6k"></i><i data-hf-id="hf-zeb8"></i><i data-hf-id="hf-y7e5"></i><i data-hf-id="hf-ylp6"></i><i data-hf-id="hf-0l8b"></i></span><span data-hf-id="hf-w8wl" id="q3-qtext" class="mono"><span data-hf-id="hf-ec4k" class="typed" data-var-text="q3Question">“What if orders streamed in instead of loading nightly?”</span></span></div>
+    <div data-hf-id="hf-2602" id="q3-dim" style="position:absolute;inset:0;background:#0d1017;opacity:0;z-index:7"></div>
+    <div data-hf-id="hf-xo07" id="q3-ans" style="position:absolute;left:120px;top:300px;z-index:8;color:#fff">
+      <div data-hf-id="hf-xif4" class="mono" style="font-size:30px;color:#8b78ee;letter-spacing:0.08em;font-weight:700">TRIED FOR REAL IN A ZERO-COPY CLONE</div>
+      <div data-hf-id="hf-pphz" style="font-weight:900;font-size:150px;letter-spacing:-0.05em;line-height:1.05;margin-top:24px"><span data-hf-id="hf-eopl" id="q3-rows">10,000</span> rows checked.</div>
+      <div data-hf-id="hf-ar0j" style="font-weight:900;font-size:150px;letter-spacing:-0.05em;line-height:1.05;color:#34c3a9"><span data-hf-id="hf-lr9i" id="q3-diff">0</span> different.</div>
+      <div data-hf-id="hf-w7bo" class="mono" style="font-size:30px;color:#9aa8b6;margin-top:36px">CoCo built the streaming mart in FILAGREE_WHATIF<br data-hf-id="hf-x5px">and matched it against the nightly one before proposing it.</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const shots = [{"src": "proposal-streaming-step-1.jpg", "at": 2.6, "origin": "40% 30%", "to": 1.16}, {"src": "proposal-streaming-step-2.jpg", "at": 4.9, "origin": "60% 30%", "to": 1.18}, {"src": "proposal-streaming-step-3.jpg", "at": 7.1, "origin": "65% 25%", "to": 1.18}];
+    tl.fromTo("#root", { xPercent: 30, filter: "blur(24px)" },
+      { xPercent: 0, filter: "blur(0px)", duration: 0.45, ease: "power3.out" }, 0);
+    tl.fromTo("#q3-kick", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.3, ease: "power3.out" }, 0.25);
+    tl.fromTo("#q3-qtext .typed", { width: "0ch" }, { width: "56ch", duration: 1.73, ease: "steps(56)" }, 0.4);
+    tl.fromTo("#q3-wave i", { scaleY: 0.25 }, { scaleY: 1, duration: 0.16, ease: "sine.inOut", stagger: { each: 0.06, repeat: 12, yoyo: true } }, 0.35);
+    // the question docks at the top and becomes the header of the tour
+    const dock = shots[0].at;
+    tl.to("#q3-q", { y: -330, scale: 0.6, duration: 0.5, ease: "power3.inOut" }, dock);
+    tl.to("#q3-kick", { opacity: 0, duration: 0.2 }, dock);
+    tl.to("#q3-wave i", { scaleY: 0.25, duration: 0.2 }, dock);
+    tl.fromTo("#q3-qbg", { opacity: 0 }, { opacity: 1, duration: 0.3 }, dock);
+    shots.forEach((s, i) => {
+      const next = i + 1 < shots.length ? shots[i + 1].at : 14;
+      tl.fromTo("#q3-s" + i, { opacity: 0 }, { opacity: 1, duration: i === 0 ? 0.4 : 0.22, ease: "power2.out" }, s.at);
+      tl.fromTo("#q3-i" + i, { scale: s.from || 1.0, transformOrigin: s.origin || "50% 40%" },
+        { scale: s.to || 1.12, duration: next - s.at, ease: "power1.inOut" }, s.at);
+      if (i + 1 < shots.length) tl.to("#q3-s" + i, { opacity: 0, duration: 0.22 }, next);
+    });
+    
+    tl.fromTo("#q3-dim", { opacity: 0 }, { opacity: 0.9, duration: 0.3 }, 9.4);
+    tl.fromTo("#q3-ans", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.35, ease: "power4.out" }, 9.5);
+    const rows = { v: 0 };
+    tl.fromTo(rows, { v: 0 }, { v: 10000, duration: 1.0, ease: "power2.out",
+      onUpdate: () => { document.querySelector("#q3-rows").textContent = Math.round(rows.v).toLocaleString("en-US"); } }, 9.6);
+
+    window.__timelines["q3"] = tl;
+  </script>
+</template>
