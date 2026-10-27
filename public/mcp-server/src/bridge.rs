@@ -151,6 +151,8 @@ impl Bridge {
                 // Only this executable, never a path from a model or the agent.
                 // Its output goes to a log beside the socket, so a failed start
                 // can be reported without a pipe that could fill and block it.
+                // The viewer creates the run directory too, but not before this log.
+                protocol::prepare_dir(&dir)?;
                 let log_path = dir.join("viewer.log");
                 let log = std::fs::File::create(&log_path)?;
                 let mut child = std::process::Command::new(&self.exe)
