@@ -5325,6 +5325,8 @@ fn spawn_label(
         .spawn((
             LayoutOwned,
             label,
+            // Waits while the label is held for a transition, then fades up.
+            crate::typography::Reveal::after(0.0).rise(4.0).seconds(0.3),
             Node {
                 position_type: PositionType::Absolute,
                 width: px(LABEL_SIZE.x),
@@ -5338,40 +5340,43 @@ fn spawn_label(
         .with_children(|label| {
             label
                 .spawn((
-                    BackgroundColor(Color::srgba(0.055, 0.07, 0.095, 0.86)),
-                    BorderColor::all(accent.with_alpha(0.6)),
+                    BackgroundColor(Color::srgba(0.035, 0.045, 0.06, 0.84)),
+                    BorderColor::all(accent.with_alpha(0.5)),
                     Node {
                         max_width: px(LABEL_SIZE.x),
                         max_height: px(LABEL_SIZE.y - LABEL_STEM),
-                        padding: UiRect::axes(px(9), px(3)),
+                        padding: UiRect::axes(px(10), px(4)),
                         border: UiRect::all(px(1)),
-                        border_radius: BorderRadius::all(px(7)),
+                        border_radius: BorderRadius::all(px(4)),
                         overflow: Overflow::clip(),
                         ..default()
                     },
                 ))
                 .with_children(|pill| {
+                    // Kind in small mono caps over the name in Inter.
                     let mut text = pill.spawn((
-                        Text::new(header),
-                        TextFont {
-                            font_size: if name.is_some() { 10.0 } else { 12.0 },
-                            ..default()
+                        Text::new(if name.is_some() {
+                            header.to_uppercase()
+                        } else {
+                            header.to_owned()
+                        }),
+                        if name.is_some() {
+                            crate::typography::mono(9.0)
+                        } else {
+                            crate::typography::medium(12.5)
                         },
                         TextColor(if name.is_some() {
-                            accent.mix(&Color::WHITE, 0.35)
+                            accent.mix(&Color::WHITE, 0.3)
                         } else {
-                            Color::srgb_u8(222, 231, 241)
+                            crate::typography::INK
                         }),
                         TextLayout::new_with_justify(Justify::Center).with_no_wrap(),
                     ));
                     if let Some(name) = name {
                         text.with_child((
                             TextSpan::new(format!("\n{name}")),
-                            TextFont {
-                                font_size: 12.0,
-                                ..default()
-                            },
-                            TextColor(Color::srgb_u8(222, 231, 241)),
+                            crate::typography::medium(12.5),
+                            TextColor(crate::typography::INK),
                         ));
                     }
                 });
@@ -5381,7 +5386,7 @@ fn spawn_label(
                     height: px(LABEL_STEM),
                     ..default()
                 },
-                BackgroundColor(accent.with_alpha(0.75)),
+                BackgroundColor(accent.with_alpha(0.6)),
             ));
         })
         .id()

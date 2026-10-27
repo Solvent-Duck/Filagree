@@ -1,0 +1,285 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "filesScanned": 8
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 5,
+    "findings": [
+      {
+        "code": "content_overlap",
+        "severity": "info",
+        "time": 23.051,
+        "selector": "#q1-qtext > span:nth-of-type(1)",
+        "message": "Two text blocks overlap and may render unreadable.",
+        "rect": {
+          "left": 187.2,
+          "top": 107.6,
+          "right": 1085.77,
+          "bottom": 158,
+          "width": 898.57,
+          "height": 50.4
+        },
+        "containerSelector": "#q2-kick",
+        "text": "“Which region earned the most in 1997?”",
+        "fixHint": "Give each block its own zone, or put data-layout-allow-overlap on the text or on a container inside the scene. A marker on the scene root does not apply.",
+        "dataAttributes": {
+          "data-var-text": "q1Question"
+        },
+        "sourceFile": "compositions/q1.html",
+        "bbox": {
+          "x": 187.2,
+          "y": 107.6,
+          "width": 898.57,
+          "height": 50.4
+        },
+        "firstSeen": 23.051,
+        "lastSeen": 23.051,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          23.051
+        ]
+      },
+      {
+        "code": "content_overlap",
+        "severity": "info",
+        "time": 23.051,
+        "selector": "#q1-region",
+        "message": "Two text blocks overlap and may render unreadable.",
+        "rect": {
+          "left": 120,
+          "top": 310,
+          "right": 971.41,
+          "bottom": 540,
+          "width": 851.41,
+          "height": 230
+        },
+        "containerSelector": "#q2-qtext > span:nth-of-type(1)",
+        "text": "AMERICA",
+        "fixHint": "Give each block its own zone, or put data-layout-allow-overlap on the text or on a container inside the scene. A marker on the scene root does not apply.",
+        "dataAttributes": {},
+        "sourceFile": "compositions/q1.html",
+        "bbox": {
+          "x": 120,
+          "y": 310,
+          "width": 851.41,
+          "height": 230
+        },
+        "firstSeen": 23.051,
+        "lastSeen": 23.051,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          23.051
+        ]
+      },
+      {
+        "code": "content_overlap",
+        "severity": "info",
+        "time": 33.898,
+        "selector": "#q2-qtext > span:nth-of-type(1)",
+        "message": "Two text blocks overlap and may render unreadable.",
+        "rect": {
+          "left": 187.2,
+          "top": 107.6,
+          "right": 1100.89,
+          "bottom": 150.2,
+          "width": 913.69,
+          "height": 42.6
+        },
+        "containerSelector": "#q3-kick",
+        "text": "“Walk me through how a customer orders a part.”",
+        "fixHint": "Give each block its own zone, or put data-layout-allow-overlap on the text or on a container inside the scene. A marker on the scene root does not apply.",
+        "dataAttributes": {
+          "data-var-text": "q2Question"
+        },
+        "sourceFile": "compositions/q2.html",
+        "bbox": {
+          "x": 187.2,
+          "y": 107.6,
+          "width": 913.69,
+          "height": 42.6
+        },
+        "firstSeen": 33.898,
+        "lastSeen": 33.898,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          33.898
+        ]
+      },
+      {
+        "code": "text_occluded",
+        "severity": "info",
+        "time": 43.333,
+        "selector": "#q3-qtext > span:nth-of-type(1)",
+        "message": "Text is hidden beneath an opaque element.",
+        "rect": {
+          "left": 187.2,
+          "top": 108.2,
+          "right": 1114.57,
+          "bottom": 144.8,
+          "width": 927.37,
+          "height": 36.6
+        },
+        "containerSelector": "#q3-dim",
+        "text": "“What if orders streamed in instead of loading nightly?”",
+        "fixHint": "Give the text its own zone, raise its stacking order above the covering element, or mark intentional layering with data-layout-allow-occlusion.",
+        "coveredFraction": 1,
+        "dataAttributes": {
+          "data-var-text": "q3Question"
+        },
+        "sourceFile": "compositions/q3.html",
+        "bbox": {
+          "x": 187.2,
+          "y": 108.2,
+          "width": 927.37,
+          "height": 36.6
+        },
+        "firstSeen": 43.333,
+        "lastSeen": 43.333,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          43.333
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 50,
+        "selector": "#hd-img",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 405.37,
+          "top": -103.28,
+          "right": 2200.49,
+          "bottom": 1171.06,
+          "width": 1795.12,
+          "height": 1274.35
+        },
+        "containerSelector": "#hands > div:nth-of-type(1)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 0,
+          "top": 0,
+          "right": 1920,
+          "bottom": 1080,
+          "width": 1920,
+          "height": 1080
+        },
+        "overflow": {
+          "right": 280.49,
+          "top": 103.28,
+          "bottom": 91.06
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hd-img",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/hands.html",
+        "bbox": {
+          "x": 405.37,
+          "y": -103.28,
+          "width": 1795.12,
+          "height": 1274.35
+        },
+        "firstSeen": 50,
+        "lastSeen": 50,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          50
+        ]
+      }
+    ],
+    "duration": 60,
+    "samples": [
+      3.333,
+      10,
+      16.667,
+      23.333,
+      30,
+      36.667,
+      43.333,
+      50,
+      56.667
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 5,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      3.333,
+      16.667,
+      30,
+      43.333,
+      56.667
+    ],
+    "checked": 12,
+    "passed": 12
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 480
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

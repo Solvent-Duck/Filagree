@@ -16,6 +16,7 @@ mod scene;
 mod shutdown;
 mod style;
 mod transition;
+mod typography;
 
 use bevy::{prelude::*, window::WindowResolution};
 use visualyze_model::architecture::{Architecture, OBJECTS_FIXTURE};
@@ -158,6 +159,7 @@ fn base_app() -> App {
             camera::OrbitCameraPlugin,
             shutdown::RenderShutdownPlugin,
             style::StylePlugin,
+            typography::TypographyPlugin,
         ));
     app
 }

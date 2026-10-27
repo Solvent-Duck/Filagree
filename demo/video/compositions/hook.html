@@ -1,0 +1,286 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    #root { background: #ffffff; }
+    #hk-wall { position: absolute; left: -40px; top: 0; width: 2000px; display: flex; gap: 36px; }
+    .hk-col { font-size: 17px; line-height: 1.45; color: #9aa3ad; width: 470px; white-space: pre; overflow: hidden; margin: 0; }
+    .hk-line { position: absolute; left: 0; right: 0; top: 50%; text-align: center; color: #0d1017;
+      font-weight: 900; font-size: 150px; letter-spacing: -0.045em; line-height: 1; }
+    .hk-line span { display: inline-block; background: #ffffff; padding: 18px 40px; box-shadow: 0 0 0 4px #0d1017; }
+  </style>
+  <div data-hf-id="hf-ngv5" id="root" data-composition-id="hook" data-width="1920" data-height="1080" data-layout-allow-overflow>
+    <div data-hf-id="hf-1aaw" id="hk-wall" data-layout-ignore><pre data-hf-id="hf-h6f6" class="hk-col mono">-- Two marts built from SNOWFLAKE_SAMPLE_DATA.TPCH_SF1, rebuilt daily by one task.
+
+CREATE OR REPLACE PROCEDURE FILAGREE.MART.REFRESH_MARTS()
+RETURNS STRING
+LANGUAGE SQL
+AS
+$$
+BEGIN
+  -- Net revenue per region, nation, month and market segment.
+  CREATE OR REPLACE TABLE FILAGREE.MART.REVENUE_BY_NATION_MONTH AS
+  SELECT
+    r.r_name                                    AS region,
+    n.n_name                                    AS nation,
+    DATE_TRUNC(&#x27;month&#x27;, o.o_orderdate)          AS month,
+    c.c_mktsegment                              AS segment,
+    COUNT(DISTINCT o.o_orderkey)                AS orders,
+    SUM(l.l_extendedprice * (1 - l.l_discount)) AS net_revenue
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.LINEITEM l
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS   o ON o.o_orderkey  = l.l_orderkey
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.CUSTOMER c ON c.c_custkey   = o.o_custkey
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.NATION   n ON n.n_nationkey = c.c_nationkey
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.REGION   r ON r.r_regionkey = n.n_regionkey
+  GROUP BY ALL;
+
+  -- One row per supplier: what they ship, how late, and how much it earns.
+  CREATE OR REPLACE TABLE FILAGREE.MART.SUPPLIER_SCORECARD AS
+  SELECT
+    s.s_suppkey                                                  AS supplier_key,
+    s.s_name                                                     AS supplier,
+    n.n_name                                                     AS nation,
+    COUNT(DISTINCT p.p_partkey)                                  AS parts_shipped,
+    SUM(l.l_extendedprice * (1 - l.l_discount))                  AS net_revenue,
+    SUM(l.l_extendedprice * (1 - l.l_discount))
+      - SUM(ps.ps_supplycost * l.l_quantity)                     AS margin,
+    AVG(IFF(l.l_receiptdate &gt; l.l_commitdate, 1, 0))             AS late_share
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.LINEITEM l
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.SUPPLIER s  ON s.s_suppkey   = l.l_suppkey
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.PARTSUPP ps ON ps.ps_partkey = l.l_partkey
+                                                 AND ps.ps_suppkey = l.l_suppkey
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.PART     p  ON p.p_partkey   = l.l_partkey
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.NATION   n  ON n.n_nationkey = s.s_nationkey
+  GROUP BY ALL;
+
+  RETURN &#x27;marts rebuilt&#x27;;
+END;
+-- Two marts built from SNOWFLAKE_SAMPLE_DATA.TPCH_SF1, rebuilt daily by one task.
+
+CREATE OR REPLACE PROCEDURE FILAGREE.MART.REFRESH_MARTS()
+RETURNS STRING
+LANGUAGE SQL
+AS
+$$
+BEGIN
+  -- Net revenue per region, nation, month and market segment.
+  CREATE OR REPLACE TABLE FILAGREE.MART.REVENUE_BY_NATION_MONTH AS
+  SELECT
+    r.r_name                                    AS region,
+    n.n_name                                    AS nation,
+    DATE_TRUNC(&#x27;month&#x27;, o.o_orderdate)          AS month,
+    c.c_mktsegment                              AS segment,
+    COUNT(DISTINCT o.o_orderkey)                AS orders,
+    SUM(l.l_extendedprice * (1 - l.l_discount)) AS net_revenue
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.LINEITEM l
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS   o ON o.o_orderkey  = l.l_orderkey
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.CUSTOMER c ON c.c_custkey   = o.o_custkey</pre><pre data-hf-id="hf-oyqr" class="hk-col mono">$$;
+
+CREATE OR REPLACE TASK FILAGREE.MART.REFRESH_MARTS_DAILY
+  WAREHOUSE = FILAGREE_WH
+  SCHEDULE = &#x27;USING CRON 0 6 * * * UTC&#x27;
+AS
+  CALL FILAGREE.MART.REFRESH_MARTS();
+
+-- Build now; resume the task only if you want the daily schedule.
+CALL FILAGREE.MART.REFRESH_MARTS();
+
+-- Open-weight AI inside Snowflake: Llama 3.3 70B via Cortex AI_COMPLETE.
+-- If llama3.3-70b is not in your region, swap in mistral-large3 or qwen3-32b,
+-- or enable cross-region inference (ACCOUNTADMIN):
+--   ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = &#x27;ANY_REGION&#x27;;
+
+-- Plain-English docs for every source table and mart, written from the column catalog.
+CREATE OR REPLACE TABLE FILAGREE.AI.TABLE_DOCS AS
+WITH catalog AS (
+  SELECT table_catalog, table_schema, table_name,
+         LISTAGG(column_name || &#x27; &#x27; || data_type, &#x27;, &#x27;)
+           WITHIN GROUP (ORDER BY ordinal_position) AS columns
+  FROM SNOWFLAKE_SAMPLE_DATA.INFORMATION_SCHEMA.COLUMNS
+  WHERE table_schema = &#x27;TPCH_SF1&#x27;
+  GROUP BY ALL
+  UNION ALL
+  SELECT table_catalog, table_schema, table_name,
+         LISTAGG(column_name || &#x27; &#x27; || data_type, &#x27;, &#x27;)
+           WITHIN GROUP (ORDER BY ordinal_position)
+  FROM FILAGREE.INFORMATION_SCHEMA.COLUMNS
+  WHERE table_schema = &#x27;MART&#x27;
+  GROUP BY ALL
+)
+SELECT
+  table_catalog || &#x27;.&#x27; || table_schema || &#x27;.&#x27; || table_name AS table_fqn,
+  table_name,
+  columns,
+  AI_COMPLETE(
+    &#x27;llama3.3-70b&#x27;,
+    &#x27;You document data for people who will never read SQL. In two short sentences, &#x27;
+    || &#x27;say what one row of the table &#x27; || table_name || &#x27; represents and one question &#x27;
+    || &#x27;it can answer. Columns: &#x27; || columns
+  )                    AS summary,
+  &#x27;llama3.3-70b&#x27;       AS model,
+  CURRENT_TIMESTAMP()  AS generated_at
+-- Two marts built from SNOWFLAKE_SAMPLE_DATA.TPCH_SF1, rebuilt daily by one task.
+
+CREATE OR REPLACE PROCEDURE FILAGREE.MART.REFRESH_MARTS()
+RETURNS STRING
+LANGUAGE SQL
+AS
+$$
+BEGIN
+  -- Net revenue per region, nation, month and market segment.
+  CREATE OR REPLACE TABLE FILAGREE.MART.REVENUE_BY_NATION_MONTH AS
+  SELECT
+    r.r_name                                    AS region,
+    n.n_name                                    AS nation,
+    DATE_TRUNC(&#x27;month&#x27;, o.o_orderdate)          AS month,
+    c.c_mktsegment                              AS segment,
+    COUNT(DISTINCT o.o_orderkey)                AS orders,
+    SUM(l.l_extendedprice * (1 - l.l_discount)) AS net_revenue
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.LINEITEM l
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS   o ON o.o_orderkey  = l.l_orderkey
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.CUSTOMER c ON c.c_custkey   = o.o_custkey</pre><pre data-hf-id="hf-8iq5" class="hk-col mono">FROM catalog;
+
+-- Answer a spoken question. focus_table is the box the viewer has selected (by gesture), or NULL.
+CREATE OR REPLACE PROCEDURE FILAGREE.AI.ASK_LAKE(question STRING, focus_table STRING DEFAULT NULL)
+RETURNS STRING
+LANGUAGE SQL
+AS
+$$
+DECLARE
+  docs STRING;
+  revenue STRING;
+  suppliers STRING;
+  answer STRING;
+BEGIN
+  SELECT LISTAGG(table_name || &#x27;: &#x27; || summary, &#x27;\n&#x27;) INTO :docs
+  FROM FILAGREE.AI.TABLE_DOCS
+  WHERE :focus_table IS NULL OR table_name = UPPER(:focus_table)
+     OR table_name IN (&#x27;REVENUE_BY_NATION_MONTH&#x27;, &#x27;SUPPLIER_SCORECARD&#x27;);
+
+  SELECT LISTAGG(region || &#x27; &#x27; || yr || &#x27;: &#x27; || TO_VARCHAR(rev, &#x27;999,999,999,999&#x27;), &#x27;\n&#x27;) INTO :revenue
+  FROM (SELECT region, YEAR(month) AS yr, ROUND(SUM(net_revenue)) AS rev
+        FROM FILAGREE.MART.REVENUE_BY_NATION_MONTH GROUP BY ALL ORDER BY region, yr);
+
+  SELECT LISTAGG(supplier || &#x27; (&#x27; || nation || &#x27;) margin &#x27; || ROUND(margin)
+                 || &#x27;, late &#x27; || ROUND(late_share * 100) || &#x27;%&#x27;, &#x27;\n&#x27;) INTO :suppliers
+  FROM (SELECT * FROM FILAGREE.MART.SUPPLIER_SCORECARD ORDER BY margin DESC LIMIT 10);
+
+  SELECT AI_COMPLETE(
+    &#x27;llama3.3-70b&#x27;,
+    &#x27;You answer questions about the TPC-H sample dataset for someone looking at a 3D map &#x27;
+    || &#x27;of it, not at SQL. Answer in at most three spoken sentences, using only the facts below. &#x27;
+    || &#x27;Name the table the answer comes from.\n\nTables:\n&#x27; || :docs
+    || &#x27;\n\nFrom table REVENUE_BY_NATION_MONTH, net revenue by region and year:\n&#x27; || :revenue
+    || &#x27;\n\nFrom table SUPPLIER_SCORECARD, top 10 suppliers by margin:\n&#x27; || :suppliers
+    || &#x27;\n\nSelected box: &#x27; || COALESCE(:focus_table, &#x27;none&#x27;)
+    || &#x27;\n\nQuestion: &#x27; || :question
+  ) INTO :answer;
+
+  RETURN answer;
+END;
+$$;
+
+-- Try it:
+-- CALL FILAGREE.AI.ASK_LAKE(&#x27;Which region earned the most in 1997?&#x27;);
+-- CALL FILAGREE.AI.ASK_LAKE(&#x27;What is in this table?&#x27;, &#x27;LINEITEM&#x27;);
+-- Two marts built from SNOWFLAKE_SAMPLE_DATA.TPCH_SF1, rebuilt daily by one task.
+
+CREATE OR REPLACE PROCEDURE FILAGREE.MART.REFRESH_MARTS()
+RETURNS STRING
+LANGUAGE SQL
+AS
+$$
+BEGIN
+  -- Net revenue per region, nation, month and market segment.
+  CREATE OR REPLACE TABLE FILAGREE.MART.REVENUE_BY_NATION_MONTH AS
+  SELECT
+    r.r_name                                    AS region,
+    n.n_name                                    AS nation,
+    DATE_TRUNC(&#x27;month&#x27;, o.o_orderdate)          AS month,
+    c.c_mktsegment                              AS segment,
+    COUNT(DISTINCT o.o_orderkey)                AS orders,
+    SUM(l.l_extendedprice * (1 - l.l_discount)) AS net_revenue
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.LINEITEM l
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS   o ON o.o_orderkey  = l.l_orderkey
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.CUSTOMER c ON c.c_custkey   = o.o_custkey</pre><pre data-hf-id="hf-rsy5" class="hk-col mono">
+-- What if orders streamed in instead of loading nightly? Try it in a zero-copy clone, never in FILAGREE itself.
+-- Run after 00_setup.sql and 10_marts.sql.
+
+USE WAREHOUSE FILAGREE_WH;
+
+-- The clone shares FILAGREE&#x27;s storage until something changes, so it is instant and free to make.
+-- The SNOWFLAKE_SAMPLE_DATA share itself is read-only and cannot be cloned; the clone keeps reading it.
+CREATE DATABASE IF NOT EXISTS FILAGREE_WHATIF CLONE FILAGREE;
+
+-- Cloned procedures and tasks keep their fully qualified FILAGREE names, so calling
+-- FILAGREE_WHATIF.MART.REFRESH_MARTS would rebuild the real marts. Remove the nightly
+-- task from the clone (clones of tasks start suspended) and never call the cloned procedure.
+DROP TASK IF EXISTS FILAGREE_WHATIF.MART.REFRESH_MARTS_DAILY;
+
+-- The nightly rebuild of REVENUE_BY_NATION_MONTH, replaced by a dynamic table that keeps
+-- itself within a minute of its sources. Same SELECT as REFRESH_MARTS in 10_marts.sql.
+-- The share has no change tracking we can turn on, so REFRESH_MODE = FULL. Run on 2026-10-26,
+-- this created directly over the share in 4.7s (no need to copy the five tables into the clone).
+-- The first refresh runs at creation, so the comparisons below work straight away.
+CREATE OR REPLACE DYNAMIC TABLE FILAGREE_WHATIF.MART.REVENUE_BY_NATION_MONTH_LIVE
+  TARGET_LAG = &#x27;1 minute&#x27;
+  WAREHOUSE = FILAGREE_WH
+  REFRESH_MODE = FULL
+AS
+SELECT
+  r.r_name                                    AS region,
+  n.n_name                                    AS nation,
+  DATE_TRUNC(&#x27;month&#x27;, o.o_orderdate)          AS month,
+  c.c_mktsegment                              AS segment,
+  COUNT(DISTINCT o.o_orderkey)                AS orders,
+  SUM(l.l_extendedprice * (1 - l.l_discount)) AS net_revenue
+FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.LINEITEM l
+JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS   o ON o.o_orderkey  = l.l_orderkey
+JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.CUSTOMER c ON c.c_custkey   = o.o_custkey
+JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.NATION   n ON n.n_nationkey = c.c_nationkey
+JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.REGION   r ON r.r_regionkey = n.n_regionkey
+GROUP BY ALL;
+
+-- Compare: same row count and the same total net revenue as the nightly mart.
+-- 2026-10-26: both 10,000 rows, both 218,102,223,885.0001.
+SELECT &#x27;nightly&#x27; AS mart, COUNT(*) AS row_count, SUM(net_revenue) AS net_revenue
+FROM FILAGREE.MART.REVENUE_BY_NATION_MONTH
+UNION ALL
+SELECT &#x27;dynamic&#x27;, COUNT(*), SUM(net_revenue)
+-- Two marts built from SNOWFLAKE_SAMPLE_DATA.TPCH_SF1, rebuilt daily by one task.
+
+CREATE OR REPLACE PROCEDURE FILAGREE.MART.REFRESH_MARTS()
+RETURNS STRING
+LANGUAGE SQL
+AS
+$$
+BEGIN
+  -- Net revenue per region, nation, month and market segment.
+  CREATE OR REPLACE TABLE FILAGREE.MART.REVENUE_BY_NATION_MONTH AS
+  SELECT
+    r.r_name                                    AS region,
+    n.n_name                                    AS nation,
+    DATE_TRUNC(&#x27;month&#x27;, o.o_orderdate)          AS month,
+    c.c_mktsegment                              AS segment,
+    COUNT(DISTINCT o.o_orderkey)                AS orders,
+    SUM(l.l_extendedprice * (1 - l.l_discount)) AS net_revenue
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.LINEITEM l
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS   o ON o.o_orderkey  = l.l_orderkey
+  JOIN SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.CUSTOMER c ON c.c_custkey   = o.o_custkey</pre></div>
+    <div data-hf-id="hf-oyqi" id="hk-l1" class="hk-line clip" data-start="0" data-duration="1.75"><span data-hf-id="hf-dv7u" data-var-text="hook1">6 million rows</span></div>
+    <div data-hf-id="hf-9w11" id="hk-l2" class="hk-line clip" data-start="1.75" data-duration="1.65"><span data-hf-id="hf-29pc">36 moving parts</span></div>
+    <div data-hf-id="hf-vzwc" id="hk-l3" class="hk-line clip" data-start="3.4" data-duration="2.6"><span data-hf-id="hf-omnj">Where do you start?</span></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#hk-wall", { y: 0 }, { y: -820, duration: 6, ease: "none" }, 0);
+    ["#hk-l1", "#hk-l2", "#hk-l3"].forEach((id, i) => {
+      const t = [0.0, 1.75, 3.4][i];
+      tl.fromTo(id + " span", { scale: i === 0 ? 1.0 : 1.18, yPercent: -50, opacity: i === 0 ? 1 : 0 },
+        { scale: 1, yPercent: -50, opacity: 1, duration: 0.22, ease: "power4.out" }, t + 0.02);
+    });
+    tl.fromTo("#root", { yPercent: 0 }, { yPercent: -100, duration: 0.5, ease: "power3.in" }, 5.5);
+    window.__timelines["hook"] = tl;
+  </script>
+</template>

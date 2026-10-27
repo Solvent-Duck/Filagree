@@ -6,7 +6,7 @@ use std::{
     sync::Arc,
 };
 
-use bevy::prelude::*;
+use bevy::{prelude::*, text::LineHeight};
 use serde_json::{Value, json};
 use visualyze_layout::projection::LayoutPolicy;
 use visualyze_model::{
@@ -25,6 +25,7 @@ use crate::{
         TeachingStage, ViewerAction, ViewerActions,
     },
     transition::{Choreography, SceneTransition, Track},
+    typography,
 };
 
 /// Seconds a step holds in autoplay before its own motion and labels are added.
@@ -517,9 +518,9 @@ fn advance(
                     .chain((!resolved.hops.is_empty()).then(|| HONESTY.to_owned()))
                     .collect(),
             );
-            for label in &step.labels {
+            for (order, label) in step.labels.iter().enumerate() {
                 if let Some(anchor) = anchor(&label.target, &positions, &relations) {
-                    spawn_callout(&mut commands, &label.text, anchor);
+                    spawn_callout(&mut commands, &label.text, anchor, order);
                 }
             }
             let trace_time: f32 = resolved.hops.len() as f32 * (HOP_SECONDS.1 + HOP_PAUSE);
@@ -815,84 +816,125 @@ fn spawn_caption(
     badges: Vec<String>,
 ) {
     let accent = Color::srgb(0.45, 0.85, 1.0);
+    let rail = Color::srgba(0.55, 0.65, 0.75, 0.22);
+    // A compact card in the bottom-left corner, under the camera's caption
+    // band, so the subject keeps the middle of the frame. Its parts arrive one
+    // beat after another: card, eyebrow, title, progress.
     commands
         .spawn((
             StepOwned,
             GlobalZIndex(15),
-            BackgroundColor(Color::srgba(0.05, 0.07, 0.1, 0.82)),
+            typography::Reveal::after(0.0).rise(14.0),
+            BackgroundColor(Color::srgba(0.035, 0.045, 0.06, 0.78)),
             BorderColor::all(accent),
             Node {
                 position_type: PositionType::Absolute,
-                left: px(24),
-                bottom: px(40),
-                max_width: percent(60),
-                padding: UiRect::new(px(18), px(22), px(12), px(14)),
-                border: UiRect::left(px(4)),
+                left: px(28),
+                bottom: px(32),
+                min_width: px(340),
+                max_width: percent(44),
+                padding: UiRect::new(px(20), px(24), px(14), px(16)),
+                border: UiRect::left(px(2)),
                 flex_direction: FlexDirection::Column,
-                row_gap: px(4),
+                row_gap: px(8),
                 ..default()
             },
         ))
         .with_children(|panel| {
             if chrome {
-                panel.spawn((
-                    Text::new(format!(
-                        "{}   {} / {}",
-                        walkthrough_title.to_uppercase(),
-                        index + 1,
-                        total
-                    )),
-                    TextFont {
-                        font_size: 12.0,
-                        ..default()
-                    },
-                    TextColor(Color::srgb_u8(140, 170, 196)),
-                ));
+                panel
+                    .spawn((
+                        typography::Reveal::after(0.06).rise(6.0),
+                        Node {
+                            flex_direction: FlexDirection::Row,
+                            justify_content: JustifyContent::SpaceBetween,
+                            align_items: AlignItems::Center,
+                            column_gap: px(24),
+                            ..default()
+                        },
+                    ))
+                    .with_children(|row| {
+                        row.spawn((
+                            Text::new(walkthrough_title.to_uppercase()),
+                            typography::mono(10.5),
+                            TextColor(typography::MUTED),
+                            TextLayout::default().with_no_wrap(),
+                        ));
+                        row.spawn((
+                            Text::new(format!("{:02}", index + 1)),
+                            typography::mono(10.5),
+                            TextColor(accent),
+                            TextLayout::default().with_no_wrap(),
+                            children![(
+                                TextSpan::new(format!(" / {total:02}")),
+                                typography::mono(10.5),
+                                TextColor(typography::MUTED),
+                            )],
+                        ));
+                    });
             }
             panel.spawn((
                 Text::new(step.title.clone()),
-                TextFont {
-                    font_size: 26.0,
-                    ..default()
-                },
-                TextColor(Color::srgb_u8(240, 245, 250)),
+                typography::heading(26.0),
+                LineHeight::RelativeToFont(1.18),
+                TextColor(typography::INK),
+                typography::Reveal::after(0.12).rise(10.0),
             ));
             if chrome {
                 panel
-                    .spawn(Node {
-                        flex_direction: FlexDirection::Row,
-                        align_items: AlignItems::Center,
-                        column_gap: px(6),
-                        margin: UiRect::top(px(6)),
-                        ..default()
-                    })
+                    .spawn((
+                        typography::Reveal::after(0.22).rise(4.0),
+                        Node {
+                            flex_direction: FlexDirection::Row,
+                            align_items: AlignItems::Center,
+                            column_gap: px(4),
+                            margin: UiRect::top(px(4)),
+                            ..default()
+                        },
+                    ))
                     .with_children(|row| {
                         for i in 0..total {
                             row.spawn((
                                 Node {
-                                    width: px(if i == index { 22 } else { 8 }),
-                                    height: px(4),
+                                    width: px(if i == index { 24 } else { 10 }),
+                                    height: px(3),
                                     ..default()
                                 },
-                                BackgroundColor(if i <= index {
+                                BackgroundColor(if i < index {
+                                    accent.with_alpha(0.45)
+                                } else if i == index {
                                     accent
                                 } else {
-                                    Color::srgb_u8(70, 86, 102)
+                                    rail
                                 }),
                             ));
                         }
-                        row.spawn((
-                            Text::new(",  back     .  next     ?  autoplay"),
-                            TextFont {
-                                font_size: 11.0,
-                                ..default()
-                            },
-                            TextColor(Color::srgb_u8(120, 145, 168)),
-                            Node {
-                                margin: UiRect::left(px(14)),
-                                ..default()
-                            },
-                        ));
+                        for (n, (key, action)) in
+                            [(",", "Back"), (".", "Next"), ("?", "Autoplay")].into_iter().enumerate()
+                        {
+                            row.spawn((
+                                Text::new(key),
+                                typography::mono(10.0),
+                                TextColor(typography::BODY),
+                                BorderColor::all(rail),
+                                Node {
+                                    margin: UiRect::left(px(if n == 0 { 18 } else { 12 })),
+                                    padding: UiRect::axes(px(5), px(1)),
+                                    border: UiRect::all(px(1)),
+                                    border_radius: BorderRadius::all(px(3)),
+                                    ..default()
+                                },
+                            ));
+                            row.spawn((
+                                Text::new(action),
+                                typography::body(11.0),
+                                TextColor(typography::MUTED),
+                                Node {
+                                    margin: UiRect::left(px(2)),
+                                    ..default()
+                                },
+                            ));
+                        }
                     });
             }
         });
@@ -900,13 +942,14 @@ fn spawn_caption(
     if badges.is_empty() {
         return;
     }
+    let warm = Color::srgb_u8(214, 190, 130);
     commands
         .spawn((
             StepOwned,
             GlobalZIndex(15),
             Node {
                 position_type: PositionType::Absolute,
-                right: px(24),
+                right: px(28),
                 top: px(24),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::End,
@@ -915,44 +958,46 @@ fn spawn_caption(
             },
         ))
         .with_children(|column| {
-            for badge in badges {
+            for (i, badge) in badges.into_iter().enumerate() {
                 column.spawn((
-                    Text::new(badge),
-                    TextFont {
-                        font_size: 12.0,
-                        ..default()
-                    },
-                    TextColor(Color::srgb_u8(210, 196, 160)),
-                    BackgroundColor(Color::srgba(0.12, 0.1, 0.05, 0.75)),
+                    Text::new(badge.to_uppercase()),
+                    typography::mono(10.0),
+                    TextColor(warm),
+                    BackgroundColor(Color::srgba(0.07, 0.06, 0.04, 0.78)),
+                    BorderColor::all(warm.with_alpha(0.8)),
                     Node {
                         padding: UiRect::axes(px(10), px(5)),
+                        border: UiRect::left(px(2)),
                         ..default()
                     },
+                    typography::Reveal::after(0.3 + 0.07 * i as f32).rise(6.0),
                 ));
             }
         });
 }
 
-fn spawn_callout(commands: &mut Commands, text: &str, anchor: Vec3) {
+fn spawn_callout(commands: &mut Commands, text: &str, anchor: Vec3, order: usize) {
     commands.spawn((
         StepOwned,
         Callout { anchor },
         GlobalZIndex(14),
-        Text::new(text.to_owned()),
-        TextFont {
-            font_size: 15.0,
-            ..default()
-        },
-        TextColor(Color::srgb_u8(20, 26, 34)),
-        BackgroundColor(Color::srgb_u8(236, 242, 248)),
+        typography::rich(
+            text,
+            typography::medium(13.5),
+            typography::heading(13.5),
+            typography::INK,
+        ),
+        BackgroundColor(Color::srgba(0.035, 0.045, 0.06, 0.88)),
         BorderColor::all(Color::srgb(0.45, 0.85, 1.0)),
         Node {
             position_type: PositionType::Absolute,
-            padding: UiRect::axes(px(10), px(5)),
-            border: UiRect::bottom(px(3)),
+            max_width: px(300),
+            padding: UiRect::new(px(10), px(12), px(6), px(7)),
+            border: UiRect::left(px(2)),
             ..default()
         },
         Visibility::Hidden,
+        typography::Reveal::after(0.35 + 0.1 * order as f32).rise(6.0),
     ));
 }
 

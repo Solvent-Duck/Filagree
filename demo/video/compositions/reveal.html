@@ -1,0 +1,27 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    #root { background: #0d1017; }
+    #rv-field { position: absolute; inset: 0; background: #34c3a9; }
+    #rv-word { position: absolute; left: 0; right: 0; top: 330px; text-align: center; font-weight: 900;
+      font-size: 300px; letter-spacing: -0.06em; color: #0d1017; line-height: 1; overflow: hidden; padding-bottom: 30px; }
+    .rv-ch { display: inline-block; }
+    #rv-sub { position: absolute; left: 0; right: 0; top: 700px; text-align: center; font-size: 50px; font-weight: 700;
+      color: #0d1017; letter-spacing: -0.02em; }
+  </style>
+  <div data-hf-id="hf-yqoq" id="root" data-composition-id="reveal" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-cyl6" id="rv-field">
+      <div data-hf-id="hf-0qx6" id="rv-word"><span data-hf-id="hf-oyjj" class="rv-ch">F</span><span data-hf-id="hf-a97i" class="rv-ch">i</span><span data-hf-id="hf-89od" class="rv-ch">l</span><span data-hf-id="hf-dfnq" class="rv-ch">a</span><span data-hf-id="hf-cn1o" class="rv-ch">g</span><span data-hf-id="hf-7h2b" class="rv-ch">r</span><span data-hf-id="hf-bufm" class="rv-ch">e</span><span data-hf-id="hf-i0ba" class="rv-ch">e</span></div>
+      <div data-hf-id="hf-dz4y" id="rv-sub" data-var-text="tagline">Ask your system out loud. Watch it answer in 3D.</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo(".rv-ch", { yPercent: 110 }, { yPercent: 0, duration: 0.5, ease: "power4.out", stagger: 0.045 }, 0.45);
+    tl.fromTo("#rv-sub", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 1.35);
+    tl.fromTo("#rv-field", { clipPath: "circle(150% at 50% 50%)" }, { clipPath: "circle(0% at 50% 50%)", duration: 0.55, ease: "power3.in" }, 3.75);
+    window.__timelines["reveal"] = tl;
+  </script>
+</template>

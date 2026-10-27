@@ -1,0 +1,30 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    #root { background: #0d1017; }
+    #hd-img { position: absolute; left: 560px; top: 0; width: 1536px; height: 1080px; }
+    #hd-title { position: absolute; left: 120px; top: 120px; color: #fff; font-weight: 900; font-size: 110px; letter-spacing: -0.045em; line-height: 1.02; }
+    #hd-verbs { position: absolute; left: 124px; top: 380px; display: flex; flex-direction: column; gap: 14px; }
+    .hd-verb { font-size: 34px; color: #fff; font-weight: 700; }
+    .hd-verb b { display: inline-block; width: 40px; color: #34c3a9; }
+  </style>
+  <div data-hf-id="hf-ovgb" id="root" data-composition-id="hands" data-width="1920" data-height="1080">
+    <img data-hf-id="hf-6f89" id="hd-img" src="assets/frames/proposal-streaming-step-6.jpg" alt="">
+    <div data-hf-id="hf-5ift" id="hd-title">Your voice asks.<br data-hf-id="hf-x5px"><span data-hf-id="hf-ylxx" style="color:#34c3a9">Your hands steer.</span></div>
+    <div data-hf-id="hf-e8tm" id="hd-verbs" class="mono">
+      <div data-hf-id="hf-7qpx" class="hd-verb"><b data-hf-id="hf-4mii">↻</b>rotate</div>
+      <div data-hf-id="hf-d8hh" class="hd-verb"><b data-hf-id="hf-d5j9">⤢</b>zoom</div>
+      <div data-hf-id="hf-qbln" class="hd-verb"><b data-hf-id="hf-qmvp">→</b>next step</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#root", { clipPath: "inset(0 0 0 100%)" }, { clipPath: "inset(0 0 0 0%)", duration: 0.45, ease: "power3.inOut" }, 0);
+    tl.fromTo("#hd-img", { scale: 1.25, rotation: -4, transformOrigin: "60% 55%" }, { scale: 1.05, rotation: 3, duration: 5, ease: "power1.inOut" }, 0);
+    tl.fromTo("#hd-title", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.35, ease: "power4.out" }, 0.35);
+    tl.fromTo(".hd-verb", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.25, ease: "power3.out", stagger: 0.35 }, 1.1);
+    window.__timelines["hands"] = tl;
+  </script>
+</template>
