@@ -22,6 +22,9 @@ fn run() -> Result<bevy::app::AppExit, Box<dyn std::error::Error>> {
         println!("{}", visualyze::input::HELP);
         return Ok(bevy::app::AppExit::Success);
     };
+    if options.maximized {
+        visualyze::start_maximized();
+    }
     if let Some(path) = options.bundle {
         if options.validate_only {
             use visualyze_model::provider::ModelProvider;

@@ -138,6 +138,30 @@ pub fn app_with_bundle(path: std::path::PathBuf, engine: LayoutEngine) -> App {
     app
 }
 
+static START_MAXIMIZED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Start the window maximized (`--maximized`); `VISUALYZE_MAXIMIZED=1` does the same.
+pub fn start_maximized() {
+    START_MAXIMIZED.store(true, std::sync::atomic::Ordering::Relaxed);
+}
+
+fn wants_maximized() -> bool {
+    START_MAXIMIZED.load(std::sync::atomic::Ordering::Relaxed)
+        || std::env::var("VISUALYZE_MAXIMIZED").is_ok_and(|v| matches!(v.as_str(), "1" | "true"))
+}
+
+/// Ask once the native window exists; earlier requests are dropped by the backend.
+fn maximize_on_create(
+    mut created: MessageReader<bevy::window::WindowCreated>,
+    mut windows: Query<&mut Window, With<bevy::window::PrimaryWindow>>,
+) {
+    for event in created.read() {
+        if let Ok(mut window) = windows.get_mut(event.window) {
+            window.set_maximized(true);
+        }
+    }
+}
+
 fn base_app() -> App {
     let mut app = App::new();
     app.insert_resource(ClearColor(style::CLEAR))
@@ -159,5 +183,8 @@ fn base_app() -> App {
             shutdown::RenderShutdownPlugin,
             style::StylePlugin,
         ));
+    if wants_maximized() {
+        app.add_systems(Update, maximize_on_create);
+    }
     app
 }

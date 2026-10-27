@@ -52,47 +52,57 @@ open-weight model running in Snowflake answers questions about it out loud.
 
 ## Demo script (3 minutes)
 
-1. In CoCo, from `demo/tpch-lake`: "Show me how a spoken question about
-   revenue gets answered from the TPC-H tables." CoCo builds
-   `.visualyze/model.json`, publishes it, and plays the walkthrough.
-2. Click `LINEITEM` to select it, then dictate to CoCo: "what's in this
-   table?". CoCo reads the selection with `get_scene_state` and calls
-   `ASK_LAKE('what''s in this table?', 'LINEITEM')`, and Llama answers from
-   `TABLE_DOCS`. Gestures rotate, zoom and step through the tour; they don't
-   point at boxes.
-3. Ask "which region earned the most in 1997?". The answer comes from the
-   revenue mart, and CoCo can `set_view` on it, or present the
-   `region-1997` tour: voice, `ASK_LAKE`, the revenue mart, Llama, then the
-   five TPC-H tables the mart joins.
-4. "Walk me through how a customer orders a part." CoCo presents the
-   `customer-order` tour over PartsHub, the wholesale parts app TPC-H models:
-   the customer portal finds stock (`ps_availqty`) through the Catalog API, the
-   Orders API writes an open order (`o_orderstatus 'O'`), the shipping worker
-   sets ship dates, and the nightly load copies it into `ORDERS`.
-5. Follow-up: "Why was this order late?" The `late-order` tour goes from the
-   shipping worker's `l_receiptdate` versus `l_commitdate`, through the
-   nightly load into `LINEITEM`, to `late_share` in the supplier scorecard
-   and the ops dashboard. It ends on the nightly hop, which sets up the
-   what-if.
-6. Propose a change: "What if PartsHub orders streamed into Snowflake instead
-   of loading nightly?" CoCo makes the zero-copy clone `FILAGREE_WHATIF` with
-   `sql/30_whatif.sql` and builds the revenue mart there as a dynamic table
-   (`TARGET_LAG = '1 minute'`, `REFRESH_MODE = FULL`). Run for real on Oct 26:
-   it built straight over the sample share in 4.7s, and it matched the nightly
-   mart exactly, with 10,000 rows on both sides, 218,102,223,885.0001 net
-   revenue on both, and 0 mismatched rows. Then it publishes the proposal model
-   (`tpch-lake-proposal-streaming`) and plays its tour. The tour shows the
-   nightly load (REMOVED), then Snowpipe Streaming into `ORDERS_LIVE` (NEW),
-   then the dynamic table, then the dashboard and `ASK_LAKE`, now
-   minutes-fresh. Tradeoffs to say out loud: freshness drops from a day to a
-   minute, but a FULL refresh re-reads 6M lines every minute. That is why the
-   clone's dynamic table is suspended. The clone did not test Snowpipe
-   Streaming, `ORDERS_LIVE` or the scorecard. To switch back, republish
-   `model.json`.
+From the repo root, run `demo/run.sh`. It opens the viewer maximized on the
+checked model and tour, with gestures on (`--no-gestures` skips the camera,
+`--warm` wakes the warehouse first). Press Q in the viewer, type a question,
+and press Enter. Gestures rotate, zoom and step through the tour; they don't
+point at boxes.
+
+1. "Explain the codebase and the data it represents." The opening tour goes
+   from the eight TPC-H tables through the marts to Llama and a spoken answer.
+2. "Which region earned the most in 1997?" The answer comes from the revenue
+   mart through `ASK_LAKE`. The `region-1997` tour goes voice, `ASK_LAKE`, the
+   revenue mart, Llama, then the five TPC-H tables the mart joins.
+3. Click `LINEITEM`, then ask "What's in this table?". The question goes to
+   `ASK_LAKE` with `LINEITEM` as the focus, and Llama answers from
+   `TABLE_DOCS`.
+4. "Walk me through how a customer orders a part." The `customer-order` tour
+   runs over PartsHub, the wholesale parts app TPC-H models: the customer
+   portal finds stock (`ps_availqty`) through the Catalog API, the Orders API
+   writes an open order (`o_orderstatus 'O'`), the shipping worker sets ship
+   dates, and the nightly load copies it into `ORDERS`.
+5. "Why was this order late?" The `late-order` tour goes from the shipping
+   worker's `l_receiptdate` versus `l_commitdate`, through the nightly load
+   into `LINEITEM`, to `late_share` in the supplier scorecard and the ops
+   dashboard. It ends on the nightly hop, which sets up the what-if.
+6. "What if PartsHub orders streamed into Snowflake?" This shows the proposal
+   model (`tpch-lake-proposal-streaming`) and its tour: the nightly load
+   (REMOVED), then Snowpipe Streaming into `ORDERS_LIVE` (NEW), then the
+   revenue mart as a dynamic table, then the dashboard and `ASK_LAKE`, now
+   minutes-fresh. CoCo tested it for real on Oct 26 with `sql/30_whatif.sql`
+   in the zero-copy clone `FILAGREE_WHATIF` (`TARGET_LAG = '1 minute'`,
+   `REFRESH_MODE = FULL`). It built straight over the sample share in 4.7s and
+   matched the nightly mart exactly: 10,000 rows on both sides,
+   218,102,223,885.0001 net revenue on both, and 0 mismatched rows. Tradeoffs
+   to say out loud: freshness drops from a day to a minute, but a FULL refresh
+   re-reads 6M lines every minute, which is why the clone's dynamic table is
+   suspended. The clone did not test Snowpipe Streaming, `ORDERS_LIVE` or the
+   scorecard.
 
 PartsHub's apps, orders database and nightly load are `declared`: TPC-H
 describes the business but ships no app code. Everything in Snowflake stays
 `supported` with SQL citations. Say so if a judge asks.
+
+### From CoCo instead
+
+Run `demo/run.sh --live` (or open `cortex` alone; the MCP bridge starts the
+viewer), then in `cortex` from `demo/tpch-lake` say: "Show me how a spoken
+question about revenue gets answered from the TPC-H tables." CoCo builds
+`.visualyze/model.json`, publishes it, and plays the walkthrough. Dictate the
+same questions to CoCo; it reads the selection with `get_scene_state`, calls
+`ASK_LAKE`, and presents the matching tour. For the what-if it runs
+`sql/30_whatif.sql` itself, then publishes the proposal. To switch back,
+republish `model.json`.
 
 ## Fallback
 
