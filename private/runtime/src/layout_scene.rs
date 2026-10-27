@@ -4708,7 +4708,12 @@ fn controls(
     >,
     content: Query<&Text, With<Inspector>>,
     mut disclosures: Query<&mut Text, (With<InspectorDisclosure>, Without<Inspector>)>,
+    ask: Option<Res<crate::ask::AskUi>>,
 ) {
+    // The ask box owns the keyboard while focused and the cursor while over it.
+    let (ask_focused, over_ask) = ask
+        .as_deref()
+        .map_or((false, false), |a| (a.focused, a.over));
     let rect = details_rect(
         Vec2::new(window.width(), window.height()),
         viewer.inspector_expanded,
@@ -4782,7 +4787,7 @@ fn controls(
             "Details | F1 closes | Full names, relationships, status and controls".into()
         };
     }
-    input_lock.0 = viewer.search_open || over_details;
+    input_lock.0 = viewer.search_open || over_details || ask_focused || over_ask;
     let zoom_input = wheel_zoom
         || keys.pressed(KeyCode::Equal)
         || keys.pressed(KeyCode::Minus)
@@ -4791,6 +4796,11 @@ fn controls(
     viewer.zoom_pending = zoom_input && window.focused && !input_lock.0;
     if !window.focused {
         keyboard.clear();
+        return;
+    }
+    if ask_focused {
+        keyboard.clear();
+        viewer.click.press = None;
         return;
     }
     if !viewer.search_open && keys.just_pressed(KeyCode::Slash) {
@@ -4874,7 +4884,9 @@ fn controls(
     // A click is decided on release, so a drag that starts on a box only
     // orbits. A press over Details is never a click on the scene.
     if mouse.just_pressed(MouseButton::Left) {
-        viewer.click.press = window.cursor_position().filter(|_| !over_details);
+        viewer.click.press = window
+            .cursor_position()
+            .filter(|_| !over_details && !over_ask);
     }
     if mouse.just_released(MouseButton::Left) {
         let press = viewer.click.press.take();

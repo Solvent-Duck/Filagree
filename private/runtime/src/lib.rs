@@ -1,3 +1,4 @@
+mod ask;
 mod camera;
 mod composition;
 mod connections;
@@ -78,7 +79,10 @@ fn app_with_snapshot_source(
         };
         app.insert_resource(input)
             .insert_resource(engine)
-            .add_plugins(layout_scene::LayoutScenePlugin);
+            .add_plugins((
+                layout_scene::LayoutScenePlugin,
+                ask::AskPlugin { serving: false },
+            ));
     }
     app
 }
@@ -115,7 +119,11 @@ pub fn app_serving(
         .insert_resource(inbox)
         .insert_resource(guard)
         .insert_resource(served)
-        .add_plugins((layout_scene::LayoutScenePlugin, playback::PlaybackPlugin))
+        .add_plugins((
+            layout_scene::LayoutScenePlugin,
+            playback::PlaybackPlugin,
+            ask::AskPlugin { serving: true },
+        ))
         .add_systems(
             Update,
             ipc::serve_requests
@@ -134,7 +142,10 @@ pub fn app_with_bundle(path: std::path::PathBuf, engine: LayoutEngine) -> App {
         } else {
             engine
         })
-        .add_plugins(layout_scene::LayoutScenePlugin);
+        .add_plugins((
+            layout_scene::LayoutScenePlugin,
+            ask::AskPlugin { serving: false },
+        ));
     app
 }
 
