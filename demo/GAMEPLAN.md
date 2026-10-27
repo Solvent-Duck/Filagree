@@ -96,7 +96,18 @@ Prompt:
 >
 > The TPC-H share itself cannot be cloned. Don't touch demo/tpch-fallback/.
 
-### C2: rehearsed what-if proposal
+### C2: rehearsed what-if proposal. Done at 19:00.
+
+`sql/30_whatif.sql` ran for real against `QN29986` as ACCOUNTADMIN, with no
+changes to the SQL; only the comments now record the results. The dynamic
+table built over the share in 4.7s (lag 1 minute, refresh mode FULL). Both
+sides had 10,000 rows and 218,102,223,885.0001 net revenue, with 0 mismatched
+rows. The dynamic table is now SUSPENDED (the file ends by suspending it), and
+`FILAGREE_WHATIF` is kept for the demo. `proposal-streaming.model.json` (38
+boxes) and its 7-step tour validate with zero warnings and are rendered. The
+nightly load is REMOVED. Snowpipe Streaming and `ORDERS_LIVE` are NEW.
+`service:refresh` keeps its ID, relabelled "Mart dynamic tables". Demo step 6 is
+in `SNOWFLAKE.md`.
 
 Prompt (after B is merged):
 

@@ -70,6 +70,21 @@ open-weight model running in Snowflake answers questions about it out loud.
    nightly load into `LINEITEM`, to `late_share` in the supplier scorecard
    and the ops dashboard. It ends on the nightly hop, which sets up the
    what-if.
+6. Propose a change: "What if PartsHub orders streamed into Snowflake instead
+   of loading nightly?" CoCo makes the zero-copy clone `FILAGREE_WHATIF` with
+   `sql/30_whatif.sql` and builds the revenue mart there as a dynamic table
+   (`TARGET_LAG = '1 minute'`, `REFRESH_MODE = FULL`). Run for real on Oct 26:
+   it built straight over the sample share in 4.7s, and it matched the nightly
+   mart exactly, with 10,000 rows on both sides, 218,102,223,885.0001 net
+   revenue on both, and 0 mismatched rows. Then it publishes the proposal model
+   (`tpch-lake-proposal-streaming`) and plays its tour. The tour shows the
+   nightly load (REMOVED), then Snowpipe Streaming into `ORDERS_LIVE` (NEW),
+   then the dynamic table, then the dashboard and `ASK_LAKE`, now
+   minutes-fresh. Tradeoffs to say out loud: freshness drops from a day to a
+   minute, but a FULL refresh re-reads 6M lines every minute. That is why the
+   clone's dynamic table is suspended. The clone did not test Snowpipe
+   Streaming, `ORDERS_LIVE` or the scorecard. To switch back, republish
+   `model.json`.
 
 PartsHub's apps, orders database and nightly load are `declared`: TPC-H
 describes the business but ships no app code. Everything in Snowflake stays
@@ -92,6 +107,7 @@ Then ask CoCo to publish `.visualyze/model.json` and present one of:
 | `region-1997.walkthrough.json` | Which region earned the most in 1997? |
 | `customer-order.walkthrough.json` | A customer orders a part |
 | `late-order.walkthrough.json` | Why was this order late? |
+| `proposal-streaming.walkthrough.json` | What if orders streamed in instead of nightly? Publish `proposal-streaming.model.json` first. |
 
 Delete `.visualyze/` before a live run.
 

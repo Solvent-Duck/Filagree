@@ -1,0 +1,1295 @@
+{
+  "schema_version": "0.1.0-draft.1",
+  "model_id": "tpch-lake-proposal-streaming",
+  "revision": 1,
+  "system_id": "scope:tpch-lake",
+  "snapshot": {
+    "id": "tpch-lake-proposal-streaming-001",
+    "source_revision": null,
+    "coverage": "complete",
+    "scope_description": "Proposal over tpch-lake revision 2: what if PartsHub orders streamed into Snowflake instead of loading nightly? Snowpipe Streaming fills a new ORDERS_LIVE table and the marts become dynamic tables with a 1-minute lag. Unchanged parts keep their IDs and basis. New and changed parts are declared and start with \"Proposed:\". The nightly load stays in the model, marked \"Proposed: removed\", so a walkthrough can label it.",
+    "omissions": [
+      "Sample schemas other than TPCH_SF1 (TPCDS, larger TPC-H scales) are not used.",
+      "Warehouse sizing, roles and grants are outside this model.",
+      "PartsHub is illustrative: TPC-H describes the business but ships no application code, so its apps, orders database and nightly load are declared, not cited.",
+      "Rehearsed in the zero-copy clone FILAGREE_WHATIF: only the revenue dynamic table, built over the unchanging sample share. Snowpipe Streaming, ORDERS_LIVE and the supplier scorecard dynamic table were not tried.",
+      "Cost is not modelled: a FULL refresh every minute re-reads 6M lines. Incremental refresh needs change tracking on every source, which the share does not allow."
+    ]
+  },
+  "entities": [
+    {
+      "id": "client:customer-portal",
+      "kind": "client",
+      "label": "Customer portal",
+      "boundary": "internal",
+      "subtype": "web",
+      "description": "Customers search parts by p_brand, p_type and p_size, order with an o_orderpriority (1-URGENT to 5-LOW), and track o_orderstatus: O open, P partly shipped, F fulfilled.",
+      "basis": "declared"
+    },
+    {
+      "id": "client:dashboard",
+      "kind": "client",
+      "label": "Ops dashboard",
+      "boundary": "internal",
+      "subtype": "web",
+      "description": "PartsHub operations view: net revenue by region and month from REVENUE_BY_NATION_MONTH, and suppliers ranked by late_share and margin from SUPPLIER_SCORECARD.",
+      "basis": "declared"
+    },
+    {
+      "id": "client:supplier-portal",
+      "kind": "client",
+      "label": "Supplier portal",
+      "boundary": "internal",
+      "subtype": "web",
+      "description": "Suppliers review their offers: ps_availqty on hand and ps_supplycost per part.",
+      "basis": "declared"
+    },
+    {
+      "id": "client:voice",
+      "kind": "client",
+      "label": "Voice and gesture",
+      "boundary": "internal",
+      "subtype": "desktop",
+      "description": "Filagree's spoken questions and pointing, sent through ask.py.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:ask-py"
+      ],
+      "technology": [
+        "Python"
+      ]
+    },
+    {
+      "id": "interface:ask",
+      "kind": "interface",
+      "label": "CALL ASK_LAKE",
+      "boundary": "internal",
+      "subtype": "api",
+      "description": "ASK_LAKE(question, focus_table): the selected box narrows the docs it uses.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:ask-proc"
+      ],
+      "protocol": "sql"
+    },
+    {
+      "id": "interface:catalog-api",
+      "kind": "interface",
+      "label": "/catalog",
+      "boundary": "internal",
+      "subtype": "api",
+      "description": "Search parts and the suppliers that stock them (PART joined to PARTSUPP and SUPPLIER).",
+      "basis": "declared",
+      "protocol": "https"
+    },
+    {
+      "id": "interface:orders-api",
+      "kind": "interface",
+      "label": "/orders",
+      "boundary": "internal",
+      "subtype": "api",
+      "description": "Create an order and read its status (o_orderstatus F/O/P).",
+      "basis": "declared",
+      "protocol": "https"
+    },
+    {
+      "id": "scope:ai",
+      "kind": "scope",
+      "label": "Analytics & AI",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "FILAGREE.AI: open-weight Llama 3.3 writes table docs and answers questions. PartsHub's ops dashboard sits beside it, reading the marts.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map",
+        "ev:setup"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "scope:customer-app",
+      "kind": "scope",
+      "label": "Customer app",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "What a buying customer (c_custkey, c_mktsegment) sees: browse parts, place and track orders.",
+      "basis": "declared"
+    },
+    {
+      "id": "scope:fulfillment",
+      "kind": "scope",
+      "label": "Fulfillment",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "Shipping, receipt and returns for each order line.",
+      "basis": "declared"
+    },
+    {
+      "id": "scope:mart",
+      "kind": "scope",
+      "label": "Marts",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "Proposed: FILAGREE.MART, the two marts people ask about, kept within a minute of their sources by dynamic tables instead of a nightly rebuild.",
+      "basis": "declared",
+      "evidence_ids": [
+        "ev:readme-map",
+        "ev:setup"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "scope:partshub",
+      "kind": "scope",
+      "label": "PartsHub",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "The wholesale parts business TPC-H was designed around: customers order parts that suppliers stock, and a warehouse ships them. Illustrative app parts; each maps to TPC-H columns.",
+      "basis": "declared"
+    },
+    {
+      "id": "scope:supplier-app",
+      "kind": "scope",
+      "label": "Supplier app",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "What a supplier (s_suppkey) sees: the parts it offers, stock on hand and cost.",
+      "basis": "declared"
+    },
+    {
+      "id": "scope:tpch",
+      "kind": "scope",
+      "label": "TPC-H sample share",
+      "boundary": "internal",
+      "subtype": "subsystem",
+      "description": "SNOWFLAKE_SAMPLE_DATA.TPCH_SF1: eight read-only tables from Snowflake's free sample share.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map",
+        "ev:setup"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "scope:tpch-lake",
+      "kind": "scope",
+      "label": "tpch-lake",
+      "boundary": "internal",
+      "subtype": "system",
+      "description": "A Snowflake data project over the free TPC-H sample share, with Cortex open-weight AI on top.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "service:ask",
+      "kind": "service",
+      "label": "ASK_LAKE",
+      "boundary": "internal",
+      "subtype": "application",
+      "description": "Stored procedure that answers a question from table docs and mart summaries.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:ask-proc"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "service:catalog-api",
+      "kind": "service",
+      "label": "Catalog API",
+      "boundary": "internal",
+      "subtype": "application",
+      "description": "Serves parts (p_name, p_brand, p_type, p_retailprice) with each supplier's offer: ps_availqty for stock, ps_supplycost for cost, s_name and s_nationkey for the supplier.",
+      "basis": "declared"
+    },
+    {
+      "id": "service:docs-writer",
+      "kind": "service",
+      "label": "Table doc writer",
+      "boundary": "internal",
+      "subtype": "worker",
+      "description": "CREATE TABLE AS that asks the open-weight model to describe every table in plain English.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:docs-llm"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "service:llm",
+      "kind": "service",
+      "label": "Llama 3.3 70B",
+      "boundary": "internal",
+      "subtype": "application",
+      "description": "Open-weight model served by Snowflake Cortex AI_COMPLETE ('llama3.3-70b').",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:docs-llm",
+        "ev:ask-llm"
+      ],
+      "technology": [
+        "Snowflake",
+        "Llama 3.3"
+      ]
+    },
+    {
+      "id": "service:nightly-load",
+      "kind": "service",
+      "label": "Nightly load",
+      "boundary": "internal",
+      "subtype": "scheduler",
+      "description": "Proposed: removed. Today it copies the day's orders and line items from the orders database into ORDERS and LINEITEM once a night, so the warehouse and both marts run up to a day behind. Snowpipe Streaming replaces it.",
+      "basis": "declared"
+    },
+    {
+      "id": "service:orders-api",
+      "kind": "service",
+      "label": "Orders API",
+      "boundary": "internal",
+      "subtype": "application",
+      "description": "Places an order: checks the customer (c_custkey, c_acctbal), writes the order with o_orderstatus 'O', o_orderpriority and o_totalprice, and one line per part with l_quantity, l_extendedprice, l_discount and the promised l_commitdate.",
+      "basis": "declared"
+    },
+    {
+      "id": "service:refresh",
+      "kind": "service",
+      "label": "Mart dynamic tables",
+      "boundary": "internal",
+      "subtype": "scheduler",
+      "description": "Proposed: the daily REFRESH_MARTS task gives way to one dynamic table per mart, TARGET_LAG = '1 minute', REFRESH_MODE = FULL, reading ORDERS_LIVE for new orders and ORDERS and LINEITEM for history. Rehearsed on 2026-10-26 in the zero-copy clone FILAGREE_WHATIF: created over the share in 4.7s; 10,000 rows and 218,102,223,885.0001 net revenue, the same as the nightly mart; 0 mismatched rows. Suspended after the comparison, because the share never changes and each refresh re-reads 6M lines. SUPPLIER_SCORECARD would follow the same pattern; not rehearsed.",
+      "basis": "declared",
+      "evidence_ids": [
+        "ev:whatif-dt",
+        "ev:whatif-compare",
+        "ev:whatif-suspend",
+        "ev:revenue-sql",
+        "ev:supplier-sql"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "service:shipping",
+      "kind": "service",
+      "label": "Shipping worker",
+      "boundary": "internal",
+      "subtype": "worker",
+      "description": "Ships each order line: sets l_shipdate when it leaves and l_receiptdate when it arrives (late when l_receiptdate > l_commitdate), records l_returnflag (R returned, A accepted, N not yet received), and rolls o_orderstatus from O to P to F.",
+      "basis": "declared"
+    },
+    {
+      "id": "service:streaming",
+      "kind": "service",
+      "label": "Snowpipe Streaming",
+      "boundary": "internal",
+      "subtype": "worker",
+      "description": "Proposed: a Snowpipe Streaming client beside the orders database sends each new or changed order and line item to Snowflake as it commits, so rows reach ORDERS_LIVE in seconds instead of overnight. Not rehearsed: the clone has no streaming client.",
+      "basis": "declared"
+    },
+    {
+      "id": "store:catalog",
+      "kind": "datastore",
+      "label": "Column catalog",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "INFORMATION_SCHEMA.COLUMNS for the sample share and the FILAGREE marts.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:docs-catalog"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "store:customer",
+      "kind": "datastore",
+      "label": "CUSTOMER",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "150,000 customers with nation and market segment.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "store:docs",
+      "kind": "datastore",
+      "label": "TABLE_DOCS",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "AI.TABLE_DOCS: one plain-English summary per table, written by Llama 3.3 70B.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:docs-llm"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "store:lineitem",
+      "kind": "datastore",
+      "label": "LINEITEM",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "6 million order lines: part, supplier, price, discount, ship dates.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "store:nation",
+      "kind": "datastore",
+      "label": "NATION",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "25 nations, each in one region.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "store:ops-orders",
+      "kind": "datastore",
+      "label": "Orders database",
+      "boundary": "internal",
+      "subtype": "relational",
+      "description": "PartsHub's live operational orders and line items: the rows that become ORDERS and LINEITEM, with o_orderstatus, o_orderpriority, l_shipdate, l_commitdate, l_receiptdate and l_returnflag.",
+      "basis": "declared"
+    },
+    {
+      "id": "store:orders",
+      "kind": "datastore",
+      "label": "ORDERS",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "1.5 million orders, one customer each.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "store:orders-live",
+      "kind": "datastore",
+      "label": "ORDERS_LIVE",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "Proposed: a new FILAGREE table, one row per order line with the ORDERS and LINEITEM columns (o_orderkey, o_custkey, o_orderdate, o_orderstatus, l_extendedprice, l_discount, l_commitdate, l_receiptdate). ORDERS and LINEITEM keep the history before the cutover.",
+      "basis": "declared"
+    },
+    {
+      "id": "store:part",
+      "kind": "datastore",
+      "label": "PART",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "200,000 parts with brand, type and size.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "store:partsupp",
+      "kind": "datastore",
+      "label": "PARTSUPP",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "800,000 part-supplier offers with supply cost.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "store:region",
+      "kind": "datastore",
+      "label": "REGION",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "5 regions: Africa, America, Asia, Europe, Middle East.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "store:revenue",
+      "kind": "datastore",
+      "label": "Revenue by nation and month",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "Proposed: MART.REVENUE_BY_NATION_MONTH as a dynamic table, minutes-fresh instead of a day old: net revenue and orders by region, nation, month and segment. Rehearsed as REVENUE_BY_NATION_MONTH_LIVE: 10,000 rows, 1992-01 to 1998-08, identical to the nightly table.",
+      "basis": "declared",
+      "evidence_ids": [
+        "ev:revenue-sql",
+        "ev:whatif-dt",
+        "ev:whatif-compare"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "store:supplier",
+      "kind": "datastore",
+      "label": "SUPPLIER",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "10,000 suppliers, each in one nation.",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    },
+    {
+      "id": "store:suppliers",
+      "kind": "datastore",
+      "label": "Supplier scorecard",
+      "boundary": "internal",
+      "subtype": "columnar",
+      "description": "Proposed: MART.SUPPLIER_SCORECARD as a second dynamic table, so late_share moves within minutes of a late receipt. One row per supplier with revenue, margin and late-delivery share. Not rehearsed in the clone.",
+      "basis": "declared",
+      "evidence_ids": [
+        "ev:supplier-sql"
+      ],
+      "technology": [
+        "Snowflake"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel:ask-exposes",
+      "kind": "exposes",
+      "source": "service:ask",
+      "target": "interface:ask",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:ask-proc"
+      ]
+    },
+    {
+      "id": "rel:ask-reads-docs",
+      "kind": "reads",
+      "source": "service:ask",
+      "target": "store:docs",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:ask-reads"
+      ]
+    },
+    {
+      "id": "rel:ask-reads-revenue",
+      "kind": "reads",
+      "source": "service:ask",
+      "target": "store:revenue",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:ask-reads"
+      ]
+    },
+    {
+      "id": "rel:ask-reads-suppliers",
+      "kind": "reads",
+      "source": "service:ask",
+      "target": "store:suppliers",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:ask-reads"
+      ]
+    },
+    {
+      "id": "rel:ask-requests-llm",
+      "kind": "requests",
+      "source": "service:ask",
+      "target": "service:llm",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:ask-llm"
+      ]
+    },
+    {
+      "id": "rel:catalog-api-exposes",
+      "kind": "exposes",
+      "source": "service:catalog-api",
+      "target": "interface:catalog-api",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:catalog-api-reads-part",
+      "kind": "reads",
+      "source": "service:catalog-api",
+      "target": "store:part",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:catalog-api-reads-partsupp",
+      "kind": "reads",
+      "source": "service:catalog-api",
+      "target": "store:partsupp",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:catalog-api-reads-supplier",
+      "kind": "reads",
+      "source": "service:catalog-api",
+      "target": "store:supplier",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-ai",
+      "kind": "contains",
+      "source": "scope:tpch-lake",
+      "target": "scope:ai",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-ask",
+      "kind": "contains",
+      "source": "scope:ai",
+      "target": "service:ask",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-catalog",
+      "kind": "contains",
+      "source": "scope:tpch-lake",
+      "target": "store:catalog",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-catalog-api",
+      "kind": "contains",
+      "source": "scope:supplier-app",
+      "target": "service:catalog-api",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-customer",
+      "kind": "contains",
+      "source": "scope:tpch",
+      "target": "store:customer",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-customer-app",
+      "kind": "contains",
+      "source": "scope:partshub",
+      "target": "scope:customer-app",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-customer-portal",
+      "kind": "contains",
+      "source": "scope:customer-app",
+      "target": "client:customer-portal",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-dashboard",
+      "kind": "contains",
+      "source": "scope:ai",
+      "target": "client:dashboard",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-docs",
+      "kind": "contains",
+      "source": "scope:ai",
+      "target": "store:docs",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-docs-writer",
+      "kind": "contains",
+      "source": "scope:ai",
+      "target": "service:docs-writer",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-fulfillment",
+      "kind": "contains",
+      "source": "scope:partshub",
+      "target": "scope:fulfillment",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-lineitem",
+      "kind": "contains",
+      "source": "scope:tpch",
+      "target": "store:lineitem",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-llm",
+      "kind": "contains",
+      "source": "scope:ai",
+      "target": "service:llm",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-mart",
+      "kind": "contains",
+      "source": "scope:tpch-lake",
+      "target": "scope:mart",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-nation",
+      "kind": "contains",
+      "source": "scope:tpch",
+      "target": "store:nation",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-nightly-load",
+      "kind": "contains",
+      "source": "scope:partshub",
+      "target": "service:nightly-load",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-ops-orders",
+      "kind": "contains",
+      "source": "scope:partshub",
+      "target": "store:ops-orders",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-orders",
+      "kind": "contains",
+      "source": "scope:tpch",
+      "target": "store:orders",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-orders-api",
+      "kind": "contains",
+      "source": "scope:customer-app",
+      "target": "service:orders-api",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-orders-live",
+      "kind": "contains",
+      "source": "scope:tpch-lake",
+      "target": "store:orders-live",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-part",
+      "kind": "contains",
+      "source": "scope:tpch",
+      "target": "store:part",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-partshub",
+      "kind": "contains",
+      "source": "scope:tpch-lake",
+      "target": "scope:partshub",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-partsupp",
+      "kind": "contains",
+      "source": "scope:tpch",
+      "target": "store:partsupp",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-refresh",
+      "kind": "contains",
+      "source": "scope:mart",
+      "target": "service:refresh",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-region",
+      "kind": "contains",
+      "source": "scope:tpch",
+      "target": "store:region",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-revenue",
+      "kind": "contains",
+      "source": "scope:mart",
+      "target": "store:revenue",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-shipping",
+      "kind": "contains",
+      "source": "scope:fulfillment",
+      "target": "service:shipping",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-streaming",
+      "kind": "contains",
+      "source": "scope:partshub",
+      "target": "service:streaming",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-supplier",
+      "kind": "contains",
+      "source": "scope:tpch",
+      "target": "store:supplier",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-supplier-app",
+      "kind": "contains",
+      "source": "scope:partshub",
+      "target": "scope:supplier-app",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-supplier-portal",
+      "kind": "contains",
+      "source": "scope:supplier-app",
+      "target": "client:supplier-portal",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:contains-suppliers",
+      "kind": "contains",
+      "source": "scope:mart",
+      "target": "store:suppliers",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-tpch",
+      "kind": "contains",
+      "source": "scope:tpch-lake",
+      "target": "scope:tpch",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:contains-voice",
+      "kind": "contains",
+      "source": "scope:tpch-lake",
+      "target": "client:voice",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:readme-map"
+      ]
+    },
+    {
+      "id": "rel:dashboard-reads-revenue",
+      "kind": "reads",
+      "source": "client:dashboard",
+      "target": "store:revenue",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:dashboard-reads-suppliers",
+      "kind": "reads",
+      "source": "client:dashboard",
+      "target": "store:suppliers",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:docs-reads-catalog",
+      "kind": "reads",
+      "source": "service:docs-writer",
+      "target": "store:catalog",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:docs-catalog"
+      ]
+    },
+    {
+      "id": "rel:docs-requests-llm",
+      "kind": "requests",
+      "source": "service:docs-writer",
+      "target": "service:llm",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:docs-llm"
+      ]
+    },
+    {
+      "id": "rel:docs-writes-docs",
+      "kind": "writes",
+      "source": "service:docs-writer",
+      "target": "store:docs",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:docs-llm"
+      ]
+    },
+    {
+      "id": "rel:load-reads-ops",
+      "kind": "reads",
+      "source": "service:nightly-load",
+      "target": "store:ops-orders",
+      "basis": "declared",
+      "description": "Proposed: removed with the nightly load."
+    },
+    {
+      "id": "rel:load-writes-lineitem",
+      "kind": "writes",
+      "source": "service:nightly-load",
+      "target": "store:lineitem",
+      "basis": "declared",
+      "description": "Proposed: removed. LINEITEM keeps the history up to the cutover; new lines land in ORDERS_LIVE."
+    },
+    {
+      "id": "rel:load-writes-orders",
+      "kind": "writes",
+      "source": "service:nightly-load",
+      "target": "store:orders",
+      "basis": "declared",
+      "description": "Proposed: removed. ORDERS keeps the history up to the cutover; new orders land in ORDERS_LIVE."
+    },
+    {
+      "id": "rel:orders-api-exposes",
+      "kind": "exposes",
+      "source": "service:orders-api",
+      "target": "interface:orders-api",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:orders-api-reads-customer",
+      "kind": "reads",
+      "source": "service:orders-api",
+      "target": "store:customer",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:orders-api-writes-ops",
+      "kind": "writes",
+      "source": "service:orders-api",
+      "target": "store:ops-orders",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:portal-requests-catalog",
+      "kind": "requests",
+      "source": "client:customer-portal",
+      "target": "interface:catalog-api",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:portal-requests-orders",
+      "kind": "requests",
+      "source": "client:customer-portal",
+      "target": "interface:orders-api",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:refresh-reads-customer",
+      "kind": "reads",
+      "source": "service:refresh",
+      "target": "store:customer",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:revenue-sql"
+      ]
+    },
+    {
+      "id": "rel:refresh-reads-lineitem",
+      "kind": "reads",
+      "source": "service:refresh",
+      "target": "store:lineitem",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:revenue-sql"
+      ]
+    },
+    {
+      "id": "rel:refresh-reads-nation",
+      "kind": "reads",
+      "source": "service:refresh",
+      "target": "store:nation",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:revenue-sql"
+      ]
+    },
+    {
+      "id": "rel:refresh-reads-orders",
+      "kind": "reads",
+      "source": "service:refresh",
+      "target": "store:orders",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:revenue-sql"
+      ]
+    },
+    {
+      "id": "rel:refresh-reads-orders-live",
+      "kind": "reads",
+      "source": "service:refresh",
+      "target": "store:orders-live",
+      "basis": "declared",
+      "description": "Proposed: the mart dynamic tables read new orders from ORDERS_LIVE alongside the history in ORDERS and LINEITEM."
+    },
+    {
+      "id": "rel:refresh-reads-part",
+      "kind": "reads",
+      "source": "service:refresh",
+      "target": "store:part",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:supplier-sql"
+      ]
+    },
+    {
+      "id": "rel:refresh-reads-partsupp",
+      "kind": "reads",
+      "source": "service:refresh",
+      "target": "store:partsupp",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:supplier-sql"
+      ]
+    },
+    {
+      "id": "rel:refresh-reads-region",
+      "kind": "reads",
+      "source": "service:refresh",
+      "target": "store:region",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:revenue-sql"
+      ]
+    },
+    {
+      "id": "rel:refresh-reads-supplier",
+      "kind": "reads",
+      "source": "service:refresh",
+      "target": "store:supplier",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:supplier-sql"
+      ]
+    },
+    {
+      "id": "rel:refresh-writes-revenue",
+      "kind": "writes",
+      "source": "service:refresh",
+      "target": "store:revenue",
+      "basis": "declared",
+      "evidence_ids": [
+        "ev:whatif-clone",
+        "ev:whatif-dt",
+        "ev:whatif-compare"
+      ],
+      "description": "Proposed: the revenue dynamic table refreshes itself within a minute. Rehearsed on 2026-10-26 in the zero-copy clone FILAGREE_WHATIF: created over the share in 4.7s; 10,000 rows and 218,102,223,885.0001 net revenue, the same as the nightly mart; 0 mismatched rows."
+    },
+    {
+      "id": "rel:refresh-writes-suppliers",
+      "kind": "writes",
+      "source": "service:refresh",
+      "target": "store:suppliers",
+      "basis": "declared",
+      "evidence_ids": [
+        "ev:supplier-sql"
+      ],
+      "description": "Proposed: the scorecard dynamic table, same lag and refresh mode. Not rehearsed."
+    },
+    {
+      "id": "rel:shipping-reads-ops",
+      "kind": "reads",
+      "source": "service:shipping",
+      "target": "store:ops-orders",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:shipping-writes-ops",
+      "kind": "writes",
+      "source": "service:shipping",
+      "target": "store:ops-orders",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:streaming-reads-ops",
+      "kind": "reads",
+      "source": "service:streaming",
+      "target": "store:ops-orders",
+      "basis": "declared",
+      "description": "Proposed: reads each committed order and line item from the orders database."
+    },
+    {
+      "id": "rel:streaming-writes-orders-live",
+      "kind": "writes",
+      "source": "service:streaming",
+      "target": "store:orders-live",
+      "basis": "declared",
+      "description": "Proposed: appends rows to ORDERS_LIVE through a Snowpipe Streaming channel, seconds after commit."
+    },
+    {
+      "id": "rel:supplier-portal-requests-catalog",
+      "kind": "requests",
+      "source": "client:supplier-portal",
+      "target": "interface:catalog-api",
+      "basis": "declared"
+    },
+    {
+      "id": "rel:voice-requests-ask",
+      "kind": "requests",
+      "source": "client:voice",
+      "target": "interface:ask",
+      "basis": "supported",
+      "evidence_ids": [
+        "ev:ask-py"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev:ask-llm",
+      "description": "ASK_LAKE sends the question and context to llama3.3-70b",
+      "locator": {
+        "kind": "source",
+        "path": "sql/20_ai.sql",
+        "start_line": 62,
+        "end_line": 73
+      }
+    },
+    {
+      "id": "ev:ask-proc",
+      "description": "ASK_LAKE(question, focus_table) procedure signature",
+      "locator": {
+        "kind": "source",
+        "path": "sql/20_ai.sql",
+        "start_line": 38,
+        "end_line": 40
+      }
+    },
+    {
+      "id": "ev:ask-py",
+      "description": "ask.py calls ASK_LAKE with the spoken question and selected box",
+      "locator": {
+        "kind": "source",
+        "path": "ask/ask.py",
+        "start_line": 16,
+        "end_line": 23
+      }
+    },
+    {
+      "id": "ev:ask-reads",
+      "description": "ASK_LAKE reads TABLE_DOCS and both marts for context",
+      "locator": {
+        "kind": "source",
+        "path": "sql/20_ai.sql",
+        "start_line": 49,
+        "end_line": 60
+      }
+    },
+    {
+      "id": "ev:docs-catalog",
+      "description": "TABLE_DOCS reads column lists from both INFORMATION_SCHEMA views",
+      "locator": {
+        "kind": "source",
+        "path": "sql/20_ai.sql",
+        "start_line": 7,
+        "end_line": 21
+      }
+    },
+    {
+      "id": "ev:docs-llm",
+      "description": "TABLE_DOCS asks llama3.3-70b for a two-sentence summary per table",
+      "locator": {
+        "kind": "source",
+        "path": "sql/20_ai.sql",
+        "start_line": 23,
+        "end_line": 35
+      }
+    },
+    {
+      "id": "ev:readme-map",
+      "description": "README table of the project's parts",
+      "locator": {
+        "kind": "source",
+        "path": "README.md",
+        "start_line": 7,
+        "end_line": 12
+      }
+    },
+    {
+      "id": "ev:refresh-task",
+      "description": "Daily task calls REFRESH_MARTS",
+      "locator": {
+        "kind": "source",
+        "path": "sql/10_marts.sql",
+        "start_line": 3,
+        "end_line": 52
+      }
+    },
+    {
+      "id": "ev:revenue-sql",
+      "description": "REFRESH_MARTS builds REVENUE_BY_NATION_MONTH from lineitem, orders, customer, nation, region",
+      "locator": {
+        "kind": "source",
+        "path": "sql/10_marts.sql",
+        "start_line": 9,
+        "end_line": 23
+      }
+    },
+    {
+      "id": "ev:setup",
+      "description": "Setup mounts the sample share and creates the FILAGREE database, MART and AI schemas",
+      "locator": {
+        "kind": "source",
+        "path": "sql/00_setup.sql",
+        "start_line": 3,
+        "end_line": 11
+      }
+    },
+    {
+      "id": "ev:supplier-sql",
+      "description": "REFRESH_MARTS builds SUPPLIER_SCORECARD from lineitem, supplier, partsupp, part, nation",
+      "locator": {
+        "kind": "source",
+        "path": "sql/10_marts.sql",
+        "start_line": 25,
+        "end_line": 42
+      }
+    },
+    {
+      "id": "ev:whatif-clone",
+      "description": "FILAGREE_WHATIF: zero-copy clone of FILAGREE with the nightly task dropped",
+      "locator": {
+        "kind": "source",
+        "path": "sql/30_whatif.sql",
+        "start_line": 6,
+        "end_line": 13
+      }
+    },
+    {
+      "id": "ev:whatif-compare",
+      "description": "Row count, net revenue and row-by-row comparison against the nightly mart",
+      "locator": {
+        "kind": "source",
+        "path": "sql/30_whatif.sql",
+        "start_line": 39,
+        "end_line": 53
+      }
+    },
+    {
+      "id": "ev:whatif-dt",
+      "description": "REVENUE_BY_NATION_MONTH_LIVE: dynamic table, TARGET_LAG 1 minute, REFRESH_MODE FULL, same SELECT as REFRESH_MARTS",
+      "locator": {
+        "kind": "source",
+        "path": "sql/30_whatif.sql",
+        "start_line": 15,
+        "end_line": 37
+      }
+    },
+    {
+      "id": "ev:whatif-suspend",
+      "description": "SHOW DYNAMIC TABLES, then SUSPEND once compared",
+      "locator": {
+        "kind": "source",
+        "path": "sql/30_whatif.sql",
+        "start_line": 55,
+        "end_line": 60
+      }
+    }
+  ]
+}

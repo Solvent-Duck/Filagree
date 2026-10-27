@@ -1,0 +1,248 @@
+{
+  "schema_version": "walkthrough.0.1.0-draft.1",
+  "id": "walk:proposal-streaming",
+  "model_id": "tpch-lake-proposal-streaming",
+  "expected_revision": 1,
+  "title": "What if orders streamed in instead of nightly?",
+  "teaching_views": [
+    {
+      "id": "change",
+      "title": "From the orders database to the answers",
+      "layout": "pipeline",
+      "members": [
+        "store:ops-orders",
+        "service:nightly-load",
+        "service:streaming",
+        "store:orders-live",
+        "store:orders",
+        "store:lineitem",
+        "service:refresh",
+        "store:revenue",
+        "store:suppliers",
+        "client:dashboard",
+        "service:ask"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "where",
+      "title": "The change sits between PartsHub and the marts",
+      "focus": [
+        "store:ops-orders",
+        "service:nightly-load",
+        "service:streaming",
+        "store:orders-live",
+        "service:refresh",
+        "store:revenue"
+      ],
+      "context": "dim",
+      "camera": "frame_focus",
+      "labels": [
+        {
+          "target": "service:nightly-load",
+          "text": "REMOVED"
+        },
+        {
+          "target": "store:orders-live",
+          "text": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "removed",
+      "title": "Before: the nightly load copies a day at a time",
+      "view": "change",
+      "focus": [
+        "service:nightly-load",
+        "store:ops-orders",
+        "store:orders",
+        "store:lineitem"
+      ],
+      "trace": [
+        {
+          "relation": "rel:load-reads-ops"
+        },
+        {
+          "relation": "rel:load-reads-ops",
+          "return": true
+        },
+        {
+          "relation": "rel:load-writes-lineitem"
+        }
+      ],
+      "labels": [
+        {
+          "target": "service:nightly-load",
+          "text": "REMOVED: up to a day behind"
+        },
+        {
+          "target": "rel:load-writes-orders",
+          "text": "REMOVED"
+        },
+        {
+          "target": "rel:load-writes-lineitem",
+          "text": "REMOVED"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "stream",
+      "title": "After: orders stream into ORDERS_LIVE",
+      "view": "change",
+      "focus": [
+        "service:streaming",
+        "store:ops-orders",
+        "store:orders-live"
+      ],
+      "trace": [
+        {
+          "relation": "rel:streaming-reads-ops"
+        },
+        {
+          "relation": "rel:streaming-reads-ops",
+          "return": true
+        },
+        {
+          "relation": "rel:streaming-writes-orders-live"
+        }
+      ],
+      "labels": [
+        {
+          "target": "service:streaming",
+          "text": "NEW: Snowpipe Streaming"
+        },
+        {
+          "target": "store:orders-live",
+          "text": "NEW: rows land seconds after commit"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "dynamic",
+      "title": "A dynamic table keeps revenue a minute behind",
+      "view": "change",
+      "focus": [
+        "service:refresh",
+        "store:orders-live",
+        "store:revenue"
+      ],
+      "trace": [
+        {
+          "relation": "rel:refresh-reads-orders-live"
+        },
+        {
+          "relation": "rel:refresh-reads-orders-live",
+          "return": true
+        },
+        {
+          "relation": "rel:refresh-writes-revenue"
+        }
+      ],
+      "labels": [
+        {
+          "target": "service:refresh",
+          "text": "NEW: TARGET_LAG 1 minute, REFRESH_MODE FULL"
+        },
+        {
+          "target": "store:revenue",
+          "text": "Clone: 10,000 rows, 0 mismatched"
+        },
+        {
+          "target": "rel:refresh-writes-revenue",
+          "text": "Same 218.1B net revenue as nightly"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "dashboard",
+      "title": "The ops dashboard is minutes old, not a day",
+      "view": "change",
+      "focus": [
+        "client:dashboard",
+        "store:revenue",
+        "store:suppliers"
+      ],
+      "trace": [
+        {
+          "relation": "rel:dashboard-reads-revenue"
+        },
+        {
+          "relation": "rel:dashboard-reads-revenue",
+          "return": true
+        }
+      ],
+      "labels": [
+        {
+          "target": "client:dashboard",
+          "text": "Revenue by month, minutes-fresh"
+        },
+        {
+          "target": "store:suppliers",
+          "text": "Scorecard: same pattern, not rehearsed"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "ask",
+      "title": "ASK_LAKE answers from the fresh mart",
+      "view": "change",
+      "focus": [
+        "service:ask",
+        "store:revenue"
+      ],
+      "trace": [
+        {
+          "relation": "rel:ask-reads-revenue"
+        },
+        {
+          "relation": "rel:ask-reads-revenue",
+          "return": true
+        }
+      ],
+      "labels": [
+        {
+          "target": "service:ask",
+          "text": "Same question, today's orders included"
+        }
+      ],
+      "camera": "follow_trace"
+    },
+    {
+      "id": "recap",
+      "title": "One nightly hop gone, the marts minutes-fresh",
+      "view": "change",
+      "focus": [
+        "store:ops-orders",
+        "service:nightly-load",
+        "service:streaming",
+        "store:orders-live",
+        "service:refresh",
+        "store:revenue",
+        "store:suppliers",
+        "client:dashboard",
+        "service:ask"
+      ],
+      "reveal": "cumulative",
+      "labels": [
+        {
+          "target": "service:nightly-load",
+          "text": "REMOVED"
+        },
+        {
+          "target": "store:orders-live",
+          "text": "NEW"
+        },
+        {
+          "target": "client:dashboard",
+          "text": "Minutes-fresh"
+        }
+      ],
+      "camera": "overview"
+    }
+  ]
+}
