@@ -52,9 +52,20 @@ open-weight model running in Snowflake answers questions about it out loud.
 
 ## Demo script (3 minutes)
 
-1. In CoCo, from `demo/tpch-lake`: "Show me how a spoken question about
-   revenue gets answered from the TPC-H tables." CoCo builds
-   `.visualyze/model.json`, publishes it, and plays the walkthrough.
+The stage run uses the `launch` skill in `demo/tpch-lake/.cortex/skills/`. It
+calls up the checked model and tours from `tpch-fallback/` instead of building
+them live, and it starts the gesture bridge with `gestures.sh`. The Snowflake
+answers (`ASK_LAKE` and the what-if comparison) still run live. Before you
+start, turn off Continuity Camera on any nearby iPhone so the Mac's own camera
+is camera 0, and run CoCo once from the terminal app you will present in, so
+macOS has granted it camera access.
+
+Start a new session with `cd demo/tpch-lake && cortex -c QN29986`.
+
+1. "Show me how the data flow in Snowflake works. Use the launch skill." CoCo
+   copies the model and tours into `.visualyze/`, publishes the model, starts
+   the gestures, and plays the overview tour. Step through it with a
+   one-finger swipe.
 2. Click `LINEITEM` to select it, then dictate to CoCo: "what's in this
    table?". CoCo reads the selection with `get_scene_state` and calls
    `ASK_LAKE('what''s in this table?', 'LINEITEM')`, and Llama answers from
@@ -75,9 +86,10 @@ open-weight model running in Snowflake answers questions about it out loud.
    and the ops dashboard. It ends on the nightly hop, which sets up the
    what-if.
 6. Propose a change: "What if PartsHub orders streamed into Snowflake instead
-   of loading nightly?" CoCo makes the zero-copy clone `FILAGREE_WHATIF` with
-   `sql/30_whatif.sql` and builds the revenue mart there as a dynamic table
-   (`TARGET_LAG = '1 minute'`, `REFRESH_MODE = FULL`). Run for real on Oct 26:
+   of loading nightly?" The zero-copy clone `FILAGREE_WHATIF` was made with
+   `sql/30_whatif.sql`, which builds the revenue mart there as a dynamic table
+   (`TARGET_LAG = '1 minute'`, `REFRESH_MODE = FULL`); on stage CoCo reruns
+   only the comparison query against it. Run for real on Oct 26:
    it built straight over the sample share in 4.7s, and it matched the nightly
    mart exactly, with 10,000 rows on both sides, 218,102,223,885.0001 net
    revenue on both, and 0 mismatched rows. Then it publishes the proposal model
@@ -87,8 +99,8 @@ open-weight model running in Snowflake answers questions about it out loud.
    minutes-fresh. Tradeoffs to say out loud: freshness drops from a day to a
    minute, but a FULL refresh re-reads 6M lines every minute. That is why the
    clone's dynamic table is suspended. The clone did not test Snowpipe
-   Streaming, `ORDERS_LIVE` or the scorecard. To switch back, republish
-   `model.json`.
+   Streaming, `ORDERS_LIVE` or the scorecard.
+7. "Switch back." CoCo republishes `model.json`.
 
 PartsHub's apps, orders database and nightly load are `declared`: TPC-H
 describes the business but ships no app code. Everything in Snowflake stays
@@ -96,8 +108,8 @@ describes the business but ships no app code. Everything in Snowflake stays
 
 ## Fallback
 
-If the live model build goes wrong, use the checked model (revision 2) and
-tours:
+If the launch skill doesn't load, use the checked model (revision 2) and
+tours by hand:
 
 ```sh
 mkdir -p demo/tpch-lake/.visualyze && cp demo/tpch-fallback/*.json demo/tpch-lake/.visualyze/
@@ -113,7 +125,7 @@ Then ask CoCo to publish `.visualyze/model.json` and present one of:
 | `late-order.walkthrough.json` | Why was this order late? |
 | `proposal-streaming.walkthrough.json` | What if orders streamed in instead of nightly? Publish `proposal-streaming.model.json` first. |
 
-Delete `.visualyze/` before a live run.
+Start the gestures after publishing with `demo/tpch-lake/gestures.sh`.
 
 ## If Cortex refuses the model
 
