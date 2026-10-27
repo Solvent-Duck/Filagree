@@ -1,3 +1,4 @@
+mod ask;
 mod camera;
 mod composition;
 mod connections;
@@ -79,7 +80,10 @@ fn app_with_snapshot_source(
         };
         app.insert_resource(input)
             .insert_resource(engine)
-            .add_plugins(layout_scene::LayoutScenePlugin);
+            .add_plugins((
+                layout_scene::LayoutScenePlugin,
+                ask::AskPlugin { serving: false },
+            ));
     }
     app
 }
@@ -116,7 +120,11 @@ pub fn app_serving(
         .insert_resource(inbox)
         .insert_resource(guard)
         .insert_resource(served)
-        .add_plugins((layout_scene::LayoutScenePlugin, playback::PlaybackPlugin))
+        .add_plugins((
+            layout_scene::LayoutScenePlugin,
+            playback::PlaybackPlugin,
+            ask::AskPlugin { serving: true },
+        ))
         .add_systems(
             Update,
             ipc::serve_requests
@@ -135,8 +143,35 @@ pub fn app_with_bundle(path: std::path::PathBuf, engine: LayoutEngine) -> App {
         } else {
             engine
         })
-        .add_plugins(layout_scene::LayoutScenePlugin);
+        .add_plugins((
+            layout_scene::LayoutScenePlugin,
+            ask::AskPlugin { serving: false },
+        ));
     app
+}
+
+static START_MAXIMIZED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Start the window maximized (`--maximized`); `VISUALYZE_MAXIMIZED=1` does the same.
+pub fn start_maximized() {
+    START_MAXIMIZED.store(true, std::sync::atomic::Ordering::Relaxed);
+}
+
+fn wants_maximized() -> bool {
+    START_MAXIMIZED.load(std::sync::atomic::Ordering::Relaxed)
+        || std::env::var("VISUALYZE_MAXIMIZED").is_ok_and(|v| matches!(v.as_str(), "1" | "true"))
+}
+
+/// Ask once the native window exists; earlier requests are dropped by the backend.
+fn maximize_on_create(
+    mut created: MessageReader<bevy::window::WindowCreated>,
+    mut windows: Query<&mut Window, With<bevy::window::PrimaryWindow>>,
+) {
+    for event in created.read() {
+        if let Ok(mut window) = windows.get_mut(event.window) {
+            window.set_maximized(true);
+        }
+    }
 }
 
 fn base_app() -> App {
@@ -161,5 +196,8 @@ fn base_app() -> App {
             style::StylePlugin,
             typography::TypographyPlugin,
         ));
+    if wants_maximized() {
+        app.add_systems(Update, maximize_on_create);
+    }
     app
 }
