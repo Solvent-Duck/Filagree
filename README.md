@@ -1,3 +1,59 @@
+# Filagree
+
+**Stop reading code. Ask about your system out loud and watch it in 3D.**
+
+Filagree is a hands-free, voice-driven way to understand a software and data
+system. You ask your coding agent a question. It reads the project, builds a 3D
+model of it, and walks you through the answer while you steer with hand
+gestures. Built at Hacktoberfest Hack Day Norman x Hacklahoma, October 26, 2026.
+
+You can ask three kinds of question:
+
+| Ask | What happens |
+| --- | --- |
+| **About the data:** "Which region earned the most in 1997?" | Llama 3.3 70B, running in Snowflake, answers from the marts and names the table the answer came from |
+| **How it works:** "Walk me through how a customer orders a part." | The agent builds the architecture and narrates a 3D tour that lights each step |
+| **What if:** "What if orders streamed in instead of loading nightly?" | CoCo tries the change on a zero-copy clone, checks the results match, and shows the proposed architecture |
+
+```
+voice ──> agent (CoCo or Claude Code) ──> Visualyze MCP ──> 3D viewer
+             │                                                  ▲
+             └─> Snowflake: TPC-H + marts + Cortex Llama 3.3     │
+camera ──> MediaPipe gestures (rotate, zoom, next/previous) ────┘
+```
+
+## Open-source AI
+
+- **Llama 3.3 70B** (open weights) through Snowflake Cortex `AI_COMPLETE`. It
+  writes a plain-English description of every table and answers questions in
+  [`demo/tpch-lake/sql/20_ai.sql`](demo/tpch-lake/sql/20_ai.sql).
+- **MediaPipe gesture recognizer** (Apache-2.0) drives the viewer from the
+  laptop camera ([`gestures/`](gestures/README.md)).
+- **Agent skills** for CoCo and Claude Code
+  ([`public/skills/`](public/skills/)) teach any coding agent to turn a project
+  into a model and a walkthrough.
+- **The Visualyze runtime and MCP bridge** (Rust, Bevy), MIT-licensed here.
+
+## Snowflake
+
+- **Dataset:** `SNOWFLAKE_SAMPLE_DATA.TPCH_SF1`, Snowflake's free TPC-H sample:
+  6M line items, 1.5M orders, 150K customers, and 10K suppliers.
+- **CoCo** explored the eight tables and their join keys, then ran the marts and
+  the Cortex SQL. It also ran the what-if in a clone, and it drives the 3D view
+  through the Visualyze MCP.
+- **The what-if was run for real:** a dynamic table in clone `FILAGREE_WHATIF`
+  matched the nightly mart exactly, with 10,000 rows on each side and 0 that
+  differed.
+
+Setup, the demo script, and fallbacks are in
+[`demo/SNOWFLAKE.md`](demo/SNOWFLAKE.md). Gesture setup is in
+[`gestures/README.md`](gestures/README.md).
+
+## License
+
+MIT. The rest of this README is the documentation for Visualyze, the 3D runtime
+Filagree is built on.
+
 # Visualyze
 
 Visualyze is a local, read-only visual runtime for explaining software architecture through an interactive 3D assembly. A developer's existing coding agent supplies a public, structured architecture description; the local runtime renders and explores it.

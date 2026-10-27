@@ -129,7 +129,12 @@ Prompt (after B is merged):
 - Route questions: data questions go to `ask.py`; "walk me through…" and "what if…" go to CoCo or Claude.
 - Test one spoken question end to end.
 
-### E: ship
+### E: ship. In progress at 19:15.
+
+Done: merged the teammate's gesture work, wrote the README pitch and
+`demo/SUBMISSION.md`, and fixed the demo script. There is no pointing gesture,
+so you click a box and CoCo reads the selection with `get_scene_state`. The repo
+is already public under MIT. Left: push, rehearse twice, then submit.
 
 - Top-level README: lead with the Filagree pitch, the dataset, how CoCo helped, open-weight models, and run steps.
 - Make sure the GitHub repo is public with the MIT license and everything is pushed.

@@ -48,6 +48,10 @@ Snowflake, with no file in the repo, use an opaque `reference` locator such as
   `present_walkthrough`, `set_view`, `get_scene_state`, and `control_playback`.
 - When the person asks a question about the data itself, answer it with SQL as
   usual, then `set_view` on the tables the answer came from so they can see them.
+- "This table" or "this box" means the viewer's selection. Read it with
+  `get_scene_state`, and use the selected entity's label as the table name.
+  If the project has a question procedure (for example `FILAGREE.AI.ASK_LAKE`),
+  call it with the question and that table name.
 - You narrate. Put the explanation in your reply, with one heading per step
   title, and say which dataset you used.
 

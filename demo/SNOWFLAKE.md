@@ -1,7 +1,7 @@
 # Snowflake challenge: TPC-H you never have to read
 
-Filagree turns a Snowflake dataset into a 3D model you can talk to and point
-at. CoCo explores the data and builds the pipeline, Visualyze shows it, and an
+Filagree turns a Snowflake dataset into a 3D model you talk to and steer with
+your hands. CoCo explores the data and builds the pipeline, Visualyze shows it, and an
 open-weight model running in Snowflake answers questions about it out loud.
 
 ## What the judges need to hear
@@ -15,8 +15,8 @@ open-weight model running in Snowflake answers questions about it out loud.
   `public/skills/cortex-code/` teaches CoCo how Snowflake objects map to boxes.
 - **Open-weight AI:** Llama 3.3 70B through Cortex `AI_COMPLETE`. It writes a
   plain-English doc for every table (`AI.TABLE_DOCS`) and answers spoken
-  questions through `AI.ASK_LAKE`. Hand tracking and speech-to-text are
-  open-source models too.
+  questions through `AI.ASK_LAKE`. Hand gestures use MediaPipe's open-source
+  gesture recognizer (Apache-2.0).
 - **Open source:** MIT, public on GitHub.
 
 ## Set up (once)
@@ -28,8 +28,9 @@ open-weight model running in Snowflake answers questions about it out loud.
    curl -qLsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
    ```
 
-   Run `cortex` once and create a connection named `filagree`, then check it
-   with `cortex sql "select current_role()"`.
+   Run `cortex` once and choose "Sync from app.snowflake.com". Note the
+   connection name it creates (ours is `QN29986`), because `ask.py` reads it from
+   `SNOWFLAKE_CONNECTION`.
 3. Install the skill and connect Visualyze, from the repo root:
 
    ```sh
@@ -40,13 +41,13 @@ open-weight model running in Snowflake answers questions about it out loud.
    cd demo/tpch-lake && cortex mcp add visualyze "$(git rev-parse --show-toplevel)/target/debug/visualyze" mcp
    ```
 
-4. Build the lake. Start `cortex -c filagree` in `demo/tpch-lake` and say:
-   "Explore SNOWFLAKE_SAMPLE_DATA.TPCH_SF1, then run sql/00_setup.sql,
+4. Build the lake. Start `cortex` in `demo/tpch-lake` and say: "Use role
+   ACCOUNTADMIN. Explore SNOWFLAKE_SAMPLE_DATA.TPCH_SF1, then run sql/00_setup.sql,
    sql/10_marts.sql and sql/20_ai.sql in order and fix anything that fails."
 5. Check the AI end to end:
 
    ```sh
-   uv run --with snowflake-connector-python ask/ask.py "Which region earned the most in 1997?"
+   SNOWFLAKE_CONNECTION=QN29986 uv run --with snowflake-connector-python ask/ask.py "Which region earned the most in 1997?"
    ```
 
 ## Demo script (3 minutes)
@@ -54,8 +55,11 @@ open-weight model running in Snowflake answers questions about it out loud.
 1. In CoCo, from `demo/tpch-lake`: "Show me how a spoken question about
    revenue gets answered from the TPC-H tables." CoCo builds
    `.visualyze/model.json`, publishes it, and plays the walkthrough.
-2. Point at `LINEITEM` and ask "what's in this table?". The voice layer calls
-   `ask.py "what's in this table?" LINEITEM`, and Llama answers from `TABLE_DOCS`.
+2. Click `LINEITEM` to select it, then dictate to CoCo: "what's in this
+   table?". CoCo reads the selection with `get_scene_state` and calls
+   `ASK_LAKE('what''s in this table?', 'LINEITEM')`, and Llama answers from
+   `TABLE_DOCS`. Gestures rotate, zoom and step through the tour; they don't
+   point at boxes.
 3. Ask "which region earned the most in 1997?". The answer comes from the
    revenue mart, and CoCo can `set_view` on it, or present the
    `region-1997` tour: voice, `ASK_LAKE`, the revenue mart, Llama, then the
