@@ -414,6 +414,63 @@ fn publish(
     }))
 }
 
+fn message(response: Response) -> String {
+    response
+        .error
+        .map(|e| format!("{}: {}", e.code, e.message))
+        .unwrap_or_else(|| "unknown error".into())
+}
+
+/// The ask box's tours publish through the same path as `publish`, without a
+/// socket. Nobody waits on the reply; `serve_requests` still records the model
+/// as served once it is on screen.
+pub(crate) fn publish_local(
+    path: &std::path::Path,
+    served: &mut Served,
+    actions: &mut ViewerActions,
+    status: &LayoutStatus,
+    playback: &mut Playback,
+) -> Result<(), String> {
+    let content = std::fs::read_to_string(path)
+        .map_err(|e| format!("Could not read {}: {e}", path.display()))?;
+    let params = json!({"content": content, "path": path});
+    match publish(0, &params, served, actions, status) {
+        Ok(Some(pending)) => {
+            playback.stop();
+            served.pending.push(pending);
+            Ok(())
+        }
+        Ok(None) => Ok(()),
+        Err(response) => Err(message(response)),
+    }
+}
+
+/// Present a walkthrough with autoplay, as `present` does for agents.
+pub(crate) fn present_local(
+    walkthrough: Value,
+    served: &Served,
+    status: &LayoutStatus,
+    playback: &mut Playback,
+) -> Result<(), String> {
+    let params = json!({"walkthrough": walkthrough, "autoplay": true});
+    present(false, &params, served, status, playback)
+        .map(|_| ())
+        .map_err(message)
+}
+
+/// The selected box's label, as `state` reports it.
+pub(crate) fn selected_label(served: &Served, status: &LayoutStatus) -> Option<String> {
+    let id = status.selected.as_ref()?;
+    let label = served.current(status).and_then(|m| {
+        m.snapshot()
+            .entities
+            .iter()
+            .find(|e| &e.id == id)
+            .map(|e| e.label.clone())
+    });
+    Some(label.unwrap_or_else(|| id.clone()))
+}
+
 fn present(
     single_view: bool,
     params: &Value,
