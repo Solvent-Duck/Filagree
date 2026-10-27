@@ -13,6 +13,15 @@ pub(crate) struct CameraInputLock(pub bool);
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct CameraControls;
 
+/// Camera moves received over the local socket, such as from the gesture bridge.
+/// They apply while the window is unfocused, unlike keyboard and mouse input.
+#[derive(Resource, Debug, Default)]
+pub(crate) struct RemoteCamera {
+    pub orbit: Vec2,
+    pub zoom: f32,
+    pub home: bool,
+}
+
 #[derive(Component, Debug, PartialEq)]
 pub(crate) struct OrbitCamera {
     yaw: f32,
@@ -226,6 +235,7 @@ impl Plugin for OrbitCameraPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CameraInputLock>()
             .init_resource::<CameraDirector>()
+            .init_resource::<RemoteCamera>()
             .add_systems(Update, orbit_camera.in_set(CameraControls));
     }
 }
@@ -241,6 +251,7 @@ fn orbit_camera(
     time: Res<Time>,
     input_lock: Option<Res<CameraInputLock>>,
     director: Option<ResMut<CameraDirector>>,
+    remote: Option<ResMut<RemoteCamera>>,
 ) {
     let mut scroll = 0.0;
     for event in wheel.read() {
@@ -265,18 +276,33 @@ fn orbit_camera(
     if let Some(director) = director.as_deref_mut() {
         director.advance(orbit, time.delta_secs());
     }
-    // macOS may resize a new window before it receives focus. Framing must
-    // follow the actual viewport even when keyboard/mouse input is inactive.
-    if !window.focused || input_lock.is_some_and(|lock| lock.0) {
-        **transform = orbit.transform();
-        return;
-    }
+    let locked = input_lock.is_some_and(|lock| lock.0);
     let take_over = |director: &mut Option<ResMut<CameraDirector>>| {
         if let Some(director) = director.as_deref_mut() {
             director.tween = None;
             director.interrupted = true;
         }
     };
+    if let Some(mut remote) = remote {
+        // Moves that arrive during a scene transition are dropped, not queued.
+        let remote = std::mem::take(&mut *remote);
+        if !locked {
+            if remote.home {
+                take_over(&mut director);
+                **orbit = OrbitCamera::for_scene(orbit.bounds, aspect);
+            }
+            if remote.orbit != Vec2::ZERO || remote.zoom != 0.0 {
+                take_over(&mut director);
+                orbit.adjust(remote.orbit, remote.zoom);
+            }
+        }
+    }
+    // macOS may resize a new window before it receives focus. Framing must
+    // follow the actual viewport even when keyboard/mouse input is inactive.
+    if !window.focused || locked {
+        **transform = orbit.transform();
+        return;
+    }
     if keys.just_pressed(KeyCode::KeyR) || keys.just_pressed(KeyCode::Home) {
         take_over(&mut director);
         **orbit = OrbitCamera::for_scene(orbit.bounds, aspect);
