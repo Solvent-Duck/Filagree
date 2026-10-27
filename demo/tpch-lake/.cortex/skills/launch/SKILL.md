@@ -1,6 +1,6 @@
 ---
-name: filagree-demo
-description: Run the scripted Filagree stage demo over the TPC-H lake. Use when the person says "launch", "launch the demo", or asks one of the scripted demo questions below (region 1997, what's in this table, customer orders a part, why was this order late, what if orders streamed, switch back).
+name: launch
+description: Launch and run the scripted Filagree stage demo over the TPC-H lake. Use when the person says "launch", asks to use the launch skill, asks "show me how the data flow in Snowflake works", or asks one of the scripted demo questions below (region 1997, what's in this table, customer orders a part, why was this order late, what if orders streamed, switch back).
 ---
 
 # Filagree stage demo
@@ -21,12 +21,19 @@ the whole reply short enough to read aloud in under a minute.
 
 ## Script
 
-### "launch"
+### "Show me how the data flow in Snowflake works" / "launch"
+
+Do steps 1–4 back to back, with no planning, checks or commentary in
+between. Speed matters: the audience is watching.
 
 1. Run in the shell: `mkdir -p .visualyze && cp ../tpch-fallback/*.json .visualyze/`
-2. `publish_model` with path `.visualyze/model.json`.
-3. `present_walkthrough` with path `.visualyze/walkthrough.json`.
-4. Narrate. Open with one line: "This is Snowflake's free TPC-H sample, 6 million
+2. `publish_model` with path `.visualyze/model.json`. This opens the 3D viewer.
+3. Run in the shell: `./gestures.sh`. It starts the hand-gesture model
+   (MediaPipe, open source) in the background with a camera preview, and must
+   run after step 2 because it connects to the viewer. If it prints an error,
+   say "Gestures are off, I'll use the keyboard" and carry on.
+4. `present_walkthrough` with path `.visualyze/walkthrough.json`.
+5. Narrate. Open with one line: "This is Snowflake's free TPC-H sample, 6 million
    line items across eight tables, with marts and an open-weight Llama 3.3 70B
    running inside Snowflake through Cortex."
 
